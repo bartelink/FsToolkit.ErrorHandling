@@ -25,11 +25,10 @@ module JobOption =
     let inline apply f x =
         bind (fun f' -> bind (fun x' -> singleton (f' x')) x) f
 
-
     /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>Some</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>Some</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>None</c>.</param>
-    /// <param name="input">The input <c>Job&lt;'input option&gt;</c>.</param>/
+    /// <param name="input">The input <c>Job&lt;'input option&gt;</c>.</param>
     /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>Some</c>, else returns result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)

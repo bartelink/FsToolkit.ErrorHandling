@@ -18,7 +18,7 @@ Provide two functions to execute depending on the value of the voption. If the v
 ### Example 1
 
 ```fsharp
-ValueTaskValueOption.valueSome 5
+ValueTaskValueOption.some 5
 |> ValueTaskValueOption.either (fun x -> x * 2) (fun () -> 0) 
 
 // valueTask { 10 }
@@ -27,7 +27,7 @@ ValueTaskValueOption.valueSome 5
 ### Example 2
 
 ```fsharp
-ValueTask.singleton None
+ValueTaskValueOption.none
 |> ValueTaskValueOption.either (fun x -> x * 2) (fun () -> 0) 
 
 // valueTask { 0 }

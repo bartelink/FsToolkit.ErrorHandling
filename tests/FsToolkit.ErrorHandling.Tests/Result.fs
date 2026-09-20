@@ -13,7 +13,6 @@ open TestHelpers
 open FsToolkit.ErrorHandling
 open FsToolkit.ErrorHandling.Operator.Result
 
-
 let resultIsOk =
     testList "Result.isOk Tests" [
         testCase "Is Ok true"
@@ -286,244 +285,6 @@ let ignoreTests =
     ]
 
 let err = "foobar"
-
-let requireTrueTests =
-    testList "requireTrue Tests" [
-        testCase "requireTrue happy path"
-        <| fun _ ->
-            Result.requireTrue err true
-            |> Expect.hasOkValue ()
-
-        testCase "requireTrue error path"
-        <| fun _ ->
-            Result.requireTrue err false
-            |> Expect.hasErrorValue err
-
-        testCase "requireTrueWith"
-        <| fun _ ->
-            Result.requireTrueWith (fun () -> failwith "factory should not run") true
-            |> Expect.hasOkValue ()
-
-            Result.requireTrueWith (fun () -> err) false
-            |> Expect.hasErrorValue err
-    ]
-
-let requireFalseTests =
-    testList "requireFalse Tests" [
-        testCase "requireFalse happy path"
-        <| fun _ ->
-            Result.requireFalse err false
-            |> Expect.hasOkValue ()
-
-        testCase "requireFalse error path"
-        <| fun _ ->
-            Result.requireFalse err true
-            |> Expect.hasErrorValue err
-
-        testCase "requireFalseWith"
-        <| fun _ ->
-            Result.requireFalseWith (fun () -> failwith "factory should not run") false
-            |> Expect.hasOkValue ()
-
-            Result.requireFalseWith (fun () -> err) true
-            |> Expect.hasErrorValue err
-    ]
-
-let requireSomeTests =
-    testList "requireSome Tests" [
-        testCase "requireSome happy path"
-        <| fun _ ->
-            Result.requireSome err (Some 42)
-            |> Expect.hasOkValue 42
-        testCase "requireSome error path"
-        <| fun _ ->
-            Result.requireSome err None
-            |> Expect.hasErrorValue err
-
-        testCase "requireSomeWith happy path"
-        <| fun _ ->
-            Result.requireSomeWith (fun () -> err) (Some 42)
-            |> Expect.hasOkValue 42
-        testCase "requireSomeWith error path"
-        <| fun _ ->
-            Result.requireSomeWith (fun () -> err) None
-            |> Expect.hasErrorValue err
-    ]
-
-let requireNotNullTests =
-    testList "requireNotNull Tests" [
-        testCase "requireNotNull happy path"
-        <| fun _ ->
-            Result.requireNotNull err ("test": StringNull)
-            |> Expect.hasOkValue "test"
-
-        testCase "requireNotNull error path"
-        <| fun _ ->
-            Result.requireNotNull err null
-            |> Expect.hasErrorValue err
-    ]
-
-let requireNoneTests =
-    testList "requireNone Tests" [
-        testCase "requireNone happy path"
-        <| fun _ ->
-            Result.requireNone err None
-            |> Expect.hasOkValue ()
-        testCase "requireNone error path"
-        <| fun _ ->
-            Result.requireNone err (Some 42)
-            |> Expect.hasErrorValue err
-
-        testCase "requireNoneWith happy path"
-        <| fun _ ->
-            Result.requireNoneWith (fun () -> err) None
-            |> Expect.hasOkValue ()
-        testCase "requireNoneWith error path"
-        <| fun _ ->
-            Result.requireNoneWith (fun () -> err) (Some 42)
-            |> Expect.hasErrorValue err
-    ]
-
-let requireValueSomeTests =
-    testList "requireValueSome Tests" [
-        testCase "requireValueSome happy path"
-        <| fun _ ->
-            Result.requireValueSome err (ValueSome 42)
-            |> Expect.hasOkValue 42
-
-        testCase "requireValueSome error path"
-        <| fun _ ->
-            Result.requireValueSome err ValueNone
-            |> Expect.hasErrorValue err
-
-        testCase "requireValueSomeWith"
-        <| fun _ ->
-            Result.requireValueSomeWith (fun () -> failwith "factory should not run") (ValueSome 42)
-            |> Expect.hasOkValue 42
-
-            Result.requireValueSomeWith (fun () -> err) ValueNone
-            |> Expect.hasErrorValue err
-    ]
-
-let requireValueNoneTests =
-    testList "requireValueNone Tests" [
-        testCase "requireValueNone happy path"
-        <| fun _ ->
-            Result.requireValueNone err ValueNone
-            |> Expect.hasOkValue ()
-        testCase "requireValueNone error path"
-        <| fun _ ->
-            Result.requireValueNone err (ValueSome 42)
-            |> Expect.hasErrorValue err
-
-        testCase "requireValueNoneWith"
-        <| fun _ ->
-            Result.requireValueNoneWith (fun () -> failwith "factory should not run") ValueNone
-            |> Expect.hasOkValue ()
-
-            Result.requireValueNoneWith (fun () -> err) (ValueSome 42)
-            |> Expect.hasErrorValue err
-    ]
-
-let requireEqualToTests =
-    testList "requireEqualTo Tests" [
-        testCase "requireEqualTo happy path"
-        <| fun _ ->
-            Result.requireEqualTo 42 err 42
-            |> Expect.hasOkValue ()
-
-        testCase "requireEqualTo error path"
-        <| fun _ ->
-            Result.requireEqualTo 42 err 43
-            |> Expect.hasErrorValue err
-    ]
-
-
-let requireEqualTests =
-    testList "requireEqual Tests" [
-        testCase "requireEqual happy path"
-        <| fun _ ->
-            Result.requireEqual 42 42 err
-            |> Expect.hasOkValue ()
-
-        testCase "requireEqual error path"
-        <| fun _ ->
-            Result.requireEqual 42 43 err
-            |> Expect.hasErrorValue err
-    ]
-
-
-let requireEmptyTests =
-    testList "requireEmpty Tests" [
-        testCase "requireEmpty happy path"
-        <| fun _ ->
-            Result.requireEmpty err []
-            |> Expect.hasOkValue ()
-
-        testCase "requireEmpty error path"
-        <| fun _ ->
-            Result.requireEmpty err [ 42 ]
-            |> Expect.hasErrorValue err
-    ]
-
-
-let requireNotEmptyTests =
-    testList "requireNotEmpty Tests" [
-        testCase "requireNotEmpty happy path"
-        <| fun _ ->
-            Result.requireNotEmpty err [ 42 ]
-            |> Expect.hasOkValue ()
-
-        testCase "requireNotEmpty error path"
-        <| fun _ ->
-            Result.requireNotEmpty err []
-            |> Expect.hasErrorValue err
-    ]
-
-
-let requireHeadTests =
-    testList "requireHead Tests" [
-        testCase "requireHead happy path"
-        <| fun _ ->
-            Result.requireHead err [ 42 ]
-            |> Expect.hasOkValue 42
-
-        testCase "requireHead error path"
-        <| fun _ ->
-            Result.requireHead err []
-            |> Expect.hasErrorValue err
-    ]
-
-let requireTests =
-    testList "require tests" [
-        testCase "False, Error"
-        <| fun () ->
-            let output = Result.require (fun _ -> false) "Error" (Error "Something went wrong")
-
-            Expect.equal output (Error("Something went wrong")) "Should be Error"
-
-        testCase "True, Ok"
-        <| fun () ->
-            let output = Result.require (fun _ -> true) "Error" (Ok 1)
-            Expect.equal output (Ok(1)) "Should be Ok"
-
-        testCase "False, Ok"
-        <| fun () ->
-            let output = Result.require (fun _ -> false) "Error" (Ok 1)
-            Expect.equal output (Error("Error")) "Should be Error"
-
-        testCase "True, Ok using Ok value in predicate"
-        <| fun () ->
-            let output = Result.require (fun number -> number = 1) "Error" (Ok 1)
-            Expect.equal output (Ok(1)) "Should be Ok"
-
-        testCase "False, Ok using Ok value in predicate"
-        <| fun () ->
-            let output = Result.require (fun x -> x <> 1) "Error" (Ok 1)
-
-            Expect.equal output (Error("Error")) "Should be Error"
-    ]
-
 
 let setErrorTests =
     testList "setError Tests" [
@@ -942,41 +703,6 @@ let zipErrorTests =
             Expect.equal actual (Error("Bad1", "Bad2")) "Should be Error"
     ]
 
-let checkTests =
-    testList "check tests" [
-        testCase "Ok, Error"
-        <| (fun () ->
-            let output = Result.check (fun _ -> Ok()) (Error(1))
-            Expect.equal output (Error(1)) "Should be error"
-        )
-
-        testCase "OK, Ok"
-        <| (fun () ->
-            let output = Result.check (fun _ -> Ok()) (Ok(1))
-            Expect.equal output (Ok(1)) "Should be Ok"
-        )
-
-        testCase "Error, Error"
-        <| (fun () ->
-            let output = Result.check (fun _ -> Error(2)) (Error(1))
-            Expect.equal output (Error(1)) "Should be Error"
-        )
-
-        testCase "Error, Ok"
-        <| (fun () ->
-            let output = Result.check (fun _ -> Error(2)) (Ok(1))
-            Expect.equal output (Error(2)) "Should be Error"
-        )
-
-        testCase "Using the result value in the predicate"
-        <| (fun () ->
-            let output =
-                Result.check (fun number -> if number = 1 then Error(2) else Ok()) (Ok(1))
-
-            Expect.equal output (Error(2)) "Should be Error"
-        )
-    ]
-
 let allTests =
     testList "Result Tests" [
         resultIsOk
@@ -993,19 +719,6 @@ let allTests =
         orElseTests
         orElseWithTests
         ignoreTests
-        requireTrueTests
-        requireFalseTests
-        requireSomeTests
-        requireNoneTests
-        requireValueSomeTests
-        requireValueNoneTests
-        requireNotNullTests
-        requireEqualToTests
-        requireEqualTests
-        requireEmptyTests
-        requireNotEmptyTests
-        requireHeadTests
-        requireTests
         setErrorTests
         withErrorTests
         defaultValueTests
@@ -1024,5 +737,4 @@ let allTests =
 #endif
         zipTests
         zipErrorTests
-        checkTests
     ]

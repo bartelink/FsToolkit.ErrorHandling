@@ -37,7 +37,7 @@ let result : Async<Result<string, string>> =
   AsyncResult.error 404
   |> AsyncResult.eitherMap
        (fun s -> s.ToUpper())
-       (fun code -> sprintf "Error code: %d" code)
+       (fun code -> $"Error code: %d{code}")
 // yields Error "Error code: 404"
 ```
 

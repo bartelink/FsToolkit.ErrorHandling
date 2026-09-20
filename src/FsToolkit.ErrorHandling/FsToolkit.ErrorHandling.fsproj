@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Nullness.fs" />
+    <Compile Include="Req.fs" />
     <Compile Include="Result.fs" />
     <Compile Include="ResultCE.fs" />
     <Compile Include="ResultOp.fs" />
@@ -19,11 +20,11 @@
     <Compile Include="ResultOptionCE.fs" />
     <Compile Include="ResultOptionOp.fs" />
     <Compile Include="Async.fs" />
-    <Compile Include="Task.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />
-    <Compile Include="TaskOp.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />
     <Compile Include="AsyncResult.fs" />
     <Compile Include="AsyncResultCE.fs" />
     <Compile Include="AsyncResultOp.fs" />
+    <Compile Include="Task.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />
+    <Compile Include="TaskOp.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />
     <Compile Include="TaskResult.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />
     <Compile Include="TaskResultCE.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />
     <Compile Include="TaskResultOp.fs" Condition="'$(FABLE_COMPILER)' != 'true'" />

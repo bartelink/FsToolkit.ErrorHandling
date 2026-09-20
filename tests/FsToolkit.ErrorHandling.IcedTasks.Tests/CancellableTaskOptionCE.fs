@@ -984,7 +984,7 @@ module CancellableTaskOptionCE =
                         input
                         |> CancellableTaskOption.either (fun x -> x + 2) (fun () -> 42)
 
-                    let actual = (computation CancellationToken.None).GetAwaiter().GetResult()
+                    let actual = (computation CancellationToken.None).Result
                     Expect.equal 7 actual ""
                 }
                 testCaseAsync "None"
@@ -995,7 +995,7 @@ module CancellableTaskOptionCE =
                         input
                         |> CancellableTaskOption.either (fun x -> x + 2) (fun () -> 42)
 
-                    let actual = (computation CancellationToken.None).GetAwaiter().GetResult()
+                    let actual = (computation CancellationToken.None).Result
                     Expect.equal 42 actual ""
                 }
             ]
@@ -1053,7 +1053,6 @@ module CancellableTaskOptionCE =
                 f (CancellableTaskOption.some ())
                 |> ignore
         ]
-
 
     [<Tests>]
     let cancellableTaskOptionTests =

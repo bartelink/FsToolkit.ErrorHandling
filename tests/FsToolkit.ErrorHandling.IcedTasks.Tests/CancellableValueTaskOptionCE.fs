@@ -399,7 +399,7 @@ module CancellableValueTaskOptionCE =
                             cancellableValueTaskOption {
                                 try
                                     return 42
-                                with ex ->
+                                with _ ->
                                     return -1
                             }
 
@@ -415,54 +415,52 @@ module CancellableValueTaskOptionCE =
                                 try
                                     failwith "test"
                                     return 42
-                                with ex ->
+                                with _ ->
                                     return -1
                             }
 
-                        let! actual = (ctr CancellationToken.None).AsTask()
+                        let! actual = ctr CancellationToken.None
                         Expect.equal actual (Some -1) "Should return -1 when exception is thrown"
                     }
             ]
+        ]
 
+    [<Tests>]
+    let cancellableValueTaskOptionHelpers =
+        testList "CancellableValueTaskOption functions" [
             testList "either" [
-                testCaseTask "Some"
+                testCase "Some"
                 <| fun () ->
-                    task {
-                        let input = cancellableValueTaskOption { return 5 }
+                    let computation =
+                        CancellableValueTaskOption.some 5
+                        |> CancellableValueTaskOption.either (fun x -> x + 2) (fun () -> 42)
 
-                        let! actual =
-                            input
-                            |> CancellableValueTaskOption.either (fun x -> x + 2) (fun () -> 42)
-                            |> fun value -> value CancellationToken.None
-                            |> _.AsTask()
+                    let actual = (computation CancellationToken.None).Result
 
-                        Expect.equal 7 actual ""
-                    }
-                testCaseTask "None"
+                    Expect.equal 7 actual ""
+                testCase "None"
                 <| fun () ->
-                    task {
-                        let input = fun _ -> ValueTask<Option<int>>(None)
+                    let computation =
+                        CancellableValueTaskOption.none
+                        |> CancellableValueTaskOption.either (fun x -> x + 2) (fun () -> 42)
 
-                        let! actual =
-                            input
-                            |> CancellableValueTaskOption.either (fun x -> x + 2) (fun () -> 42)
-                            |> fun value -> value CancellationToken.None
-                            |> _.AsTask()
+                    let actual = (computation CancellationToken.None).Result
 
-                        Expect.equal 42 actual ""
-                    }
+                    Expect.equal 42 actual ""
             ]
+        ]
 
-            testList "backgroundCancellableValueTaskOption" [
-                testCaseTask "return"
-                <| fun () ->
-                    task {
-                        let data = 42
+    [<Tests>]
+    let backgroundCancellableValueTaskOptionBuilderTests =
+        testList "backgroundCancellableValueTaskOption" [
+            testCaseTask "return"
+            <| fun () ->
+                task {
+                    let data = 42
 
-                        let ctr = backgroundCancellableValueTaskOption { return data }
+                    let ctr = backgroundCancellableValueTaskOption { return data }
 
-                        let! actual = (ctr CancellationToken.None).AsTask()
-                        Expect.equal actual (Some data) "Should be able to Return value"
-                    }
-            ]
+                    let actual = (ctr CancellationToken.None).Result
+                    Expect.equal actual (Some data) "Should be able to Return value"
+                }
         ]

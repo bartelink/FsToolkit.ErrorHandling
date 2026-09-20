@@ -1,6 +1,10 @@
 # Summary
 
 * FsToolkit.ErrorHandling
+
+  * Req
+    * [functions](req/functions.md)
+
   * Result
     * [apply](result/apply.md)
     * [bind](result/bind.md)
@@ -16,7 +20,7 @@
     * [Operators](result/operators.md)
     * [orElse Functions](result/orElseFunctions.md)
     * [Other Functions](result/others.md)
-    * [require Functions](result/requireFunctions.md)
+    * [req Functions](result/reqFunctions.md)
     * [tee Functions](result/teeFunctions.md)
     * [tryCreate](result/tryCreate.md)
     * [zip](result/zip.md)

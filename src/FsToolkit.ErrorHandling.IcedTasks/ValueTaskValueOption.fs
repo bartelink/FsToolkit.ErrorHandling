@@ -3,6 +3,18 @@ namespace FsToolkit.ErrorHandling
 open System.Threading.Tasks
 open IcedTasks
 
+[<RequireQualifiedAccess>]
+module ValueTask =
+
+    /// Bind the ValueTask with a synchronous Result-returning function.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: ValueTask<'input>)
+        : ValueTask<Result<'output, 'error>> =
+        ValueTask.map binder input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value
 
 [<RequireQualifiedAccess>]
 module ValueTaskValueOption =
@@ -15,17 +27,24 @@ module ValueTaskValueOption =
 
     let inline bind ([<InlineIfLambda>] f) (ar: ValueTask<_ voption>) =
         valueTask {
-            let! opt = ar
-
-            match opt with
+            match! ar with
             | ValueSome x -> return! f x
             | ValueNone -> return ValueNone
         }
 
-    let inline valueSome x = ValueTask<_ voption>(ValueSome x)
+    /// <summary>Lifts an item to a ValueTask.</summary>
+    /// <param name="x">The item to be the result of the ValueTask.</param>
+    /// <returns>A ValueTask with the item as the result.</returns>
+    let inline some x = ValueTask.singleton (ValueSome x)
+    /// <summary>A ValueTask that yields ValueNone.</summary>
+    /// <returns>A ValueTask with ValueNone as the result.</returns>
+    let inline none<'a> : ValueTask<'a voption> = ValueTask.singleton ValueNone
+
+    [<System.Obsolete "Please use some instead of singleton">]
+    let inline valueSome x = some x
 
     let inline apply f x =
-        bind (fun f' -> bind (fun x' -> valueSome (f' x')) x) f
+        bind (fun f' -> bind (fun x' -> some (f' x')) x) f
 
     let inline zip (left: ValueTask<'a voption>) (right: ValueTask<'b voption>) =
         valueTask {
@@ -34,11 +53,11 @@ module ValueTaskValueOption =
             return ValueOption.zip r1 r2
         }
 
-    /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>ValueSome</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
+    /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>ValueSome</c>, otherwise returns the result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>ValueSome</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>ValueNone</c>.</param>
-    /// <param name="input">The input <c>ValueTask&lt;'input voption&gt;</c>.</param>/
-    /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>ValueSome</c>, else returns result of running <paramref name="onNone"/>.</returns>
+    /// <param name="input">The input <c>ValueTask&lt;'input voption&gt;</c>.</param>
+    /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>ValueSome</c>, else returns the result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)
         ([<InlineIfLambda>] onNone: unit -> 'output)
@@ -80,3 +99,20 @@ module ValueTaskValueOption =
             let! opt = valueTaskValueOption
             return ValueOption.defaultWith defThunk opt
         }
+
+    /// Bind the ValueTask&lt;'input voption&gt; with a synchronous Result-returning function.
+    /// A ValueNone input will be mapped to Ok ValueNone.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: ValueTask<'input voption>)
+        : ValueTask<Result<'output voption, 'error>> =
+        ValueTask.bindResult
+            (function
+            | ValueSome x ->
+                binder x
+                |> Result.map ValueSome
+            | ValueNone -> Ok ValueNone)
+            input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value

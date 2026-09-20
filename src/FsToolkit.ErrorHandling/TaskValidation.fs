@@ -257,9 +257,7 @@ module TaskValidation =
         (input: TaskValidation<'okInput, 'error>)
         : TaskValidation<'okOutput, 'error> =
         task {
-            let! input = input
-
-            match input with
+            match! input with
             | Ok x -> return! binder x
             | Error e -> return Error e
         }

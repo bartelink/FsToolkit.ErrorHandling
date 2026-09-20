@@ -36,7 +36,7 @@ let mapTests =
 
         testCase "map with Task(None)"
         <| fun _ ->
-            Task.singleton (None)
+            TaskOption.none
             |> TaskOption.map remainingCharacters
             |> Expect.hasTaskNoneValue
     ]
@@ -75,11 +75,11 @@ let applyTests =
         <| fun _ ->
             Task.singleton (Some validTweet)
             |> TaskOption.apply (Task.singleton (Some remainingCharacters))
-            |> Expect.hasTaskSomeValue (267)
+            |> Expect.hasTaskSomeValue 267
 
         testCase "apply with Task(None)"
         <| fun _ ->
-            Task.singleton None
+            TaskOption.none
             |> TaskOption.apply (Task.singleton (Some remainingCharacters))
             |> Expect.hasTaskNoneValue
     ]
@@ -114,7 +114,7 @@ let taskOptionOperatorTests =
                 if isAllowed then
                     createPostSome validCreatePostRequest
                 else
-                    Task.singleton None
+                    TaskOption.none
             )
             |> Expect.hasTaskSomeValue (PostId newPostId)
     ]
@@ -167,7 +167,7 @@ let defaultValueTests =
         <| fun () ->
             task {
                 let expectedValue = 10
-                let taskOption = Task.singleton None
+                let taskOption = TaskOption.none
                 let! result = TaskOption.defaultValue expectedValue taskOption
                 Expect.equal result expectedValue ""
             }
@@ -190,7 +190,7 @@ let defaultWithTests =
         <| fun () ->
             task {
                 let expectedValue = 10
-                let taskOption = Task.singleton None
+                let taskOption = TaskOption.none
                 let! result = TaskOption.defaultWith (fun () -> expectedValue) taskOption
                 Expect.equal result expectedValue ""
             }

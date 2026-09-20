@@ -152,13 +152,13 @@ let bindResultTests =
     testList "JobResult.bindResult tests" [
         testCase "bindResult maps Ok"
         <| fun _ ->
-            JobResult.singleton 1
+            JobResult.ok 1
             |> JobResult.bindResult (fun value -> Ok(value + 1))
             |> Expect.hasJobOkValueSync 2
 
         testCase "bindResult returns binder Error"
         <| fun _ ->
-            JobResult.singleton 1
+            JobResult.ok 1
             |> JobResult.bindResult (fun _ -> Error "binder")
             |> Expect.hasJobErrorValueSync "binder"
 
@@ -174,7 +174,7 @@ let eitherTests =
     testList "JobResult.either* tests" [
         testCase "either maps Ok and Error"
         <| fun _ ->
-            JobResult.singleton 1
+            JobResult.ok 1
             |> JobResult.either ((+) 1) id
             |> Expect.hasJobValue 2
 
@@ -184,7 +184,7 @@ let eitherTests =
 
         testCase "eitherMap maps Ok and Error"
         <| fun _ ->
-            JobResult.singleton 1
+            JobResult.ok 1
             |> JobResult.eitherMap ((+) 1) String.length
             |> Expect.hasJobValue (Ok 2)
 
@@ -199,14 +199,14 @@ let orElseTests =
         testCaseJob "Ok Ok takes first Ok"
         <| job {
             return!
-                JobResult.singleton "First"
-                |> JobResult.orElse (JobResult.singleton "Second")
+                JobResult.ok "First"
+                |> JobResult.orElse (JobResult.ok "Second")
                 |> Expect.hasJobOkValue "First"
         }
         testCaseJob "Ok Error takes first Ok"
         <| job {
             return!
-                JobResult.singleton "First"
+                JobResult.ok "First"
                 |> JobResult.orElse (JobResult.error "Second")
                 |> Expect.hasJobOkValue "First"
         }
@@ -214,7 +214,7 @@ let orElseTests =
         <| job {
             return!
                 JobResult.error "First"
-                |> JobResult.orElse (JobResult.singleton "Second")
+                |> JobResult.orElse (JobResult.ok "Second")
                 |> Expect.hasJobOkValue "Second"
         }
         testCaseJob "Error Error takes second error"
@@ -232,14 +232,14 @@ let orElseWithTests =
         testCaseJob "Ok Ok takes first Ok"
         <| job {
             return!
-                JobResult.singleton "First"
-                |> JobResult.orElseWith (fun _ -> JobResult.singleton "Second")
+                JobResult.ok "First"
+                |> JobResult.orElseWith (fun _ -> JobResult.ok "Second")
                 |> Expect.hasJobOkValue "First"
         }
         testCaseJob "Ok Error takes first Ok"
         <| job {
             return!
-                JobResult.singleton "First"
+                JobResult.ok "First"
                 |> JobResult.orElseWith (fun _ -> JobResult.error "Second")
                 |> Expect.hasJobOkValue "First"
         }
@@ -247,7 +247,7 @@ let orElseWithTests =
         <| job {
             return!
                 JobResult.error "First"
-                |> JobResult.orElseWith (fun _ -> JobResult.singleton "Second")
+                |> JobResult.orElseWith (fun _ -> JobResult.ok "Second")
                 |> Expect.hasJobOkValue "Second"
         }
         testCaseJob "Error Error takes second error"
@@ -293,13 +293,13 @@ let requireTrueTests =
         testCase "requireTrue happy path"
         <| fun _ ->
             toJob true
-            |> JobResult.requireTrue err
+            |> Job.req Req.isTrue err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireTrue error path"
         <| fun _ ->
             toJob false
-            |> JobResult.requireTrue err
+            |> Job.req Req.isTrue err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -309,13 +309,13 @@ let requireFalseTests =
         testCase "requireFalse happy path"
         <| fun _ ->
             toJob false
-            |> JobResult.requireFalse err
+            |> Job.req Req.isFalse err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireFalse error path"
         <| fun _ ->
             toJob true
-            |> JobResult.requireFalse err
+            |> Job.req Req.isFalse err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -325,13 +325,13 @@ let requireSomeTests =
         testCase "requireSome happy path"
         <| fun _ ->
             toJob (Some 42)
-            |> JobResult.requireSome err
+            |> Job.req Req.some err
             |> Expect.hasJobOkValueSync 42
 
         testCase "requireSome error path"
         <| fun _ ->
             toJob None
-            |> JobResult.requireSome err
+            |> Job.req Req.some err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -341,13 +341,13 @@ let requireSomeWithTests =
         testCase "requireSomeWith happy path"
         <| fun _ ->
             toJob (Some 42)
-            |> JobResult.requireSomeWith (fun () -> err)
+            |> Job.req Req.someWith (fun () -> err)
             |> Expect.hasJobOkValueSync 42
 
         testCase "requireSomeWith error path"
         <| fun _ ->
             toJob None
-            |> JobResult.requireSomeWith (fun () -> err)
+            |> Job.req Req.someWith (fun () -> err)
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -357,13 +357,13 @@ let requireNoneTests =
         testCase "requireNone happy path"
         <| fun _ ->
             toJob None
-            |> JobResult.requireNone err
+            |> Job.req Req.none err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireNone error path"
         <| fun _ ->
             toJob (Some 42)
-            |> JobResult.requireNone err
+            |> Job.req Req.none err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -373,13 +373,13 @@ let requireNoneWithTests =
         testCase "requireNoneWith happy path"
         <| fun _ ->
             toJob None
-            |> JobResult.requireNoneWith (fun () -> err)
+            |> Job.req Req.noneWith (fun () -> err)
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireNoneWith error path"
         <| fun _ ->
             toJob (Some 42)
-            |> JobResult.requireNoneWith (fun () -> err)
+            |> Job.req Req.noneWith (fun () -> err)
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -389,13 +389,13 @@ let requireValueSomeTests =
         testCase "requireValueSome happy path"
         <| fun _ ->
             toJob (ValueSome 42)
-            |> JobResult.requireValueSome err
+            |> Job.req Req.valueSome err
             |> Expect.hasJobOkValueSync 42
 
         testCase "requireValueSome error path"
         <| fun _ ->
             toJob ValueNone
-            |> JobResult.requireValueSome err
+            |> Job.req Req.valueSome err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -405,13 +405,13 @@ let requireValueNoneTests =
         testCase "requireValueNone happy path"
         <| fun _ ->
             toJob ValueNone
-            |> JobResult.requireValueNone err
+            |> Job.req Req.valueNone err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireValueNone error path"
         <| fun _ ->
             toJob (ValueSome 42)
-            |> JobResult.requireValueNone err
+            |> Job.req Req.valueNone err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -421,13 +421,13 @@ let requireEqualToTests =
         testCase "requireEqualTo happy path"
         <| fun _ ->
             toJob 42
-            |> JobResult.requireEqualTo 42 err
+            |> Job.req (Req.equalTo 42) err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireEqualTo error path"
         <| fun _ ->
             toJob 43
-            |> JobResult.requireEqualTo 42 err
+            |> Job.req (Req.equalTo 42) err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -436,12 +436,14 @@ let requireEqualTests =
     testList "JobResult.requireEqual Tests" [
         testCase "requireEqual happy path"
         <| fun _ ->
-            JobResult.requireEqual 42 (toJob 42) err
+            toJob 42
+            |> Job.req (Req.equalTo 42) err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireEqual error path"
         <| fun _ ->
-            JobResult.requireEqual 42 (toJob 43) err
+            toJob 43
+            |> Job.req (Req.equalTo 42) err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -451,13 +453,13 @@ let requireEmptyTests =
         testCase "requireEmpty happy path"
         <| fun _ ->
             toJob []
-            |> JobResult.requireEmpty err
+            |> Job.req Req.empty err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireEmpty error path"
         <| fun _ ->
             toJob [ 42 ]
-            |> JobResult.requireEmpty err
+            |> Job.req Req.empty err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -467,13 +469,13 @@ let requireNotEmptyTests =
         testCase "requireNotEmpty happy path"
         <| fun _ ->
             toJob [ 42 ]
-            |> JobResult.requireNotEmpty err
+            |> Job.req Req.notEmpty err
             |> Expect.hasJobOkValueSync ()
 
         testCase "requireNotEmpty error path"
         <| fun _ ->
             toJob []
-            |> JobResult.requireNotEmpty err
+            |> Job.req Req.notEmpty err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -483,13 +485,13 @@ let requireHeadTests =
         testCase "requireHead happy path"
         <| fun _ ->
             toJob [ 42 ]
-            |> JobResult.requireHead err
+            |> Job.req Req.head err
             |> Expect.hasJobOkValueSync 42
 
         testCase "requireHead error path"
         <| fun _ ->
             toJob []
-            |> JobResult.requireHead err
+            |> Job.req Req.head err
             |> Expect.hasJobErrorValueSync err
     ]
 
@@ -838,8 +840,8 @@ let bindRequireTests =
         <| job {
             return!
                 Some "john_doe"
-                |> JobResult.singleton
-                |> JobResult.bindRequireNone "user exists"
+                |> JobResult.ok
+                |> JobResult.req Req.none "user exists"
                 |> Expect.hasJobErrorValue "user exists"
         }
 
@@ -847,8 +849,8 @@ let bindRequireTests =
         <| job {
             return!
                 Some "john_doe"
-                |> JobResult.singleton
-                |> JobResult.bindRequireSome "user doesn't exists"
+                |> JobResult.ok
+                |> JobResult.req Req.some "user doesn't exists"
                 |> Expect.hasJobOkValue "john_doe"
         }
     ]
@@ -860,8 +862,8 @@ let bindRequireValueOptionTests =
         <| job {
             return!
                 ValueSome "john_doe"
-                |> JobResult.singleton
-                |> JobResult.bindRequireValueNone "user exists"
+                |> JobResult.ok
+                |> JobResult.req Req.valueNone "user exists"
                 |> Expect.hasJobErrorValue "user exists"
         }
 
@@ -869,8 +871,8 @@ let bindRequireValueOptionTests =
         <| job {
             return!
                 ValueSome "john_doe"
-                |> JobResult.singleton
-                |> JobResult.bindRequireValueSome "user doesn't exists"
+                |> JobResult.ok
+                |> JobResult.req Req.valueSome "user doesn't exists"
                 |> Expect.hasJobOkValue "john_doe"
         }
     ]

@@ -20,10 +20,19 @@ module TaskValueOption =
             return! t
         }
 
-    let inline valueSome x = Task.singleton (ValueSome x)
+    /// <summary>Lifts an item to a Task.</summary>
+    /// <param name="x">The item to be the result of the Task.</param>
+    /// <returns>A Task with the item as the result.</returns>
+    let inline some x = Task.singleton (ValueSome x)
+    /// <summary>A Task that yields ValueNone.</summary>
+    /// <returns>A Task with ValueNone as the result.</returns>
+    let inline none<'a> : Task<'a voption> = Task.singleton ValueNone
+
+    [<System.Obsolete "Please use some instead of valueSome">]
+    let inline valueSome x = some x
 
     let inline apply f x =
-        bind (fun f' -> bind (fun x' -> valueSome (f' x')) x) f
+        bind (fun f' -> bind (fun x' -> some (f' x')) x) f
 
     let inline zip left right =
         Task.zip left right
@@ -33,7 +42,7 @@ module TaskValueOption =
     /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>ValueSome</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>ValueSome</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>ValueNone</c>.</param>
-    /// <param name="input">The input <c>Task&lt;'input voption&gt;</c>.</param>/
+    /// <param name="input">The input <c>Task&lt;'input voption&gt;</c>.</param>
     /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>ValueSome</c>, else returns result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)

@@ -11,4 +11,16 @@ module Job =
 
     let inline map3 ([<InlineIfLambda>] f) x y z = apply' (map2 f x y) z
 
-    let inline zip j1 j2 = j1 <&> j2
+    let inline zip left right =
+        left
+        <&> right
+
+    /// Bind the Job with a synchronous Result-returning function.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: Job<'input>)
+        : Job<Result<'output, 'error>> =
+        Job.map binder input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value

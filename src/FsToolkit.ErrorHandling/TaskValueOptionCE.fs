@@ -1,13 +1,8 @@
 namespace FsToolkit.ErrorHandling
 
-open System
 open System.Threading.Tasks
-
-
-open System
 open System.Runtime.CompilerServices
 open System.Threading
-open System.Threading.Tasks
 open Microsoft.FSharp.Core
 open Microsoft.FSharp.Core.CompilerServices
 open Microsoft.FSharp.Core.CompilerServices.StateMachineHelpers

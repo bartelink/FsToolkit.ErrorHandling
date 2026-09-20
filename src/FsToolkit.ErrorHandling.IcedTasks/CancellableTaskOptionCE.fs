@@ -4,7 +4,6 @@
 [<AutoOpen>]
 module CancellableTaskOptionCE =
 
-    open System
     open System.Runtime.CompilerServices
     open System.Threading
     open System.Threading.Tasks
@@ -12,9 +11,7 @@ module CancellableTaskOptionCE =
     open Microsoft.FSharp.Core.CompilerServices
     open Microsoft.FSharp.Core.CompilerServices.StateMachineHelpers
     open Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicOperators
-    open Microsoft.FSharp.Collections
     open IcedTasks
-
 
     /// Contains methods to build CancellableTasks using the F# computation expression syntax
     type CancellableTaskOptionBuilder() =
@@ -262,6 +259,14 @@ module CancellableTaskOption =
     open System.Threading
     open IcedTasks
 
+    /// <summary>Lifts an item to a CancellableTaskOption.</summary>
+    /// <param name="x">The item to be the result of the CancellableTaskOption.</param>
+    /// <returns>A CancellableTaskOption with the item as the result.</returns>
+    let inline some x : CancellableTaskOption<'a> = CancellableTask.singleton (Some x)
+    /// <summary>A CancellableTaskOption that yields None.</summary>
+    /// <returns>A CancellableTaskOption with None as the result.</returns>
+    let inline none<'a> : CancellableTaskOption<'a> = CancellableTask.singleton None
+
     /// <summary>Gets the default cancellation token for executing computations.</summary>
     ///
     /// <returns>The default CancellationToken.</returns>
@@ -289,12 +294,6 @@ module CancellableTaskOption =
     /// </example>
     let inline getCancellationToken () =
         fun (ct: CancellationToken) -> ValueTask<CancellationToken> ct
-
-    /// <summary>Lifts an item to a CancellableTask.</summary>
-    /// <param name="x">The item to be the result of the CancellableTask.</param>
-    /// <returns>A CancellableTask with the item as the result.</returns>
-    let inline some x = cancellableTask { return Some x }
-
 
     /// <summary>Allows chaining of CancellableTasks.</summary>
     /// <param name="binder">The continuation.</param>
@@ -370,7 +369,7 @@ module CancellableTaskOption =
     /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>Some</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>Some</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>None</c>.</param>
-    /// <param name="input">The input <c>CancellableTask&lt;'input option&gt;</c>.</param>/
+    /// <param name="input">The input <c>CancellableTask&lt;'input option&gt;</c>.</param>
     /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>Some</c>, else returns result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)
@@ -413,3 +412,20 @@ module CancellableTaskOption =
         : CancellableTask<'value> =
         cancellableTaskOption
         |> CancellableTask.map (Option.defaultWith defThunk)
+
+    /// Bind the CancellableTask&lt;'input option&gt; with a synchronous Result-returning function.
+    /// A None input will be mapped to Ok None.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: CancellableTask<'input option>)
+        : CancellableTask<Result<'output option, 'error>> =
+        CancellableTask.bindResult
+            (function
+            | Some x ->
+                binder x
+                |> Result.map Some
+            | None -> Ok None)
+            input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value

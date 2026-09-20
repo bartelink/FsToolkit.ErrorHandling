@@ -35,7 +35,7 @@ let mapTests =
     ]
 
 let map2Tests =
-    testList "AyncResult.map2 tests" [
+    testList "AsyncResult.map2 tests" [
         testCaseAsync "map2 with Async(Ok x) Async(Ok y)"
         <| async {
             let userId = Guid.NewGuid()
@@ -120,8 +120,8 @@ let mapErrorTests =
         <| async {
             do!
                 createPostFailure validCreatePostRequest
-                |> AsyncResult.mapError (fun ex -> ex.Message)
-                |> Expect.hasAsyncErrorValue (commonEx.Message)
+                |> AsyncResult.mapError _.Message
+                |> Expect.hasAsyncErrorValue commonEx.Message
         }
     ]
 
@@ -136,7 +136,7 @@ let bindTests =
                      if isAllowed then
                          return! createPostSuccess validCreatePostRequest
                      else
-                         return (Error(Exception "not allowed to post"))
+                         return Error(Exception "not allowed to post")
                  }
              )
              |> Expect.hasAsyncOkValue (PostId newPostId))
@@ -185,27 +185,27 @@ let bindResultTests =
         <| async {
             let! some =
                 AsyncResult.ok (Some 1)
-                |> AsyncResult.bindRequireSomeWith (fun () -> "none")
+                |> AsyncResult.req Req.someWith (fun () -> "none")
 
             let! none =
                 AsyncResult.ok None
-                |> AsyncResult.bindRequireNoneWith (fun () -> "some")
+                |> AsyncResult.req Req.noneWith (fun () -> "some")
 
             let! valueSome =
                 AsyncResult.ok (ValueSome 1)
-                |> AsyncResult.bindRequireValueSomeWith (fun () -> "none")
+                |> AsyncResult.req Req.valueSomeWith (fun () -> "none")
 
             let! valueNone =
                 AsyncResult.ok ValueNone
-                |> AsyncResult.bindRequireValueNoneWith (fun () -> "some")
+                |> AsyncResult.req Req.valueNoneWith (fun () -> "some")
 
             let! trueValue =
                 AsyncResult.ok true
-                |> AsyncResult.bindRequireTrueWith (fun () -> "false")
+                |> AsyncResult.req Req.isTrueWith (fun () -> "false")
 
             let! falseValue =
                 AsyncResult.ok false
-                |> AsyncResult.bindRequireFalseWith (fun () -> "true")
+                |> AsyncResult.req Req.isFalseWith (fun () -> "true")
 
             Expect.equal some (Ok 1) ""
             Expect.equal none (Ok()) ""
@@ -316,12 +316,12 @@ let requireTrueTests =
     testList "AsyncResult.requireTrue Tests" [
         testCaseAsync "requireTrue happy path"
         <| (toAsync true
-            |> AsyncResult.requireTrue err
+            |> Async.req Req.isTrue err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireTrue error path"
         <| (toAsync false
-            |> AsyncResult.requireTrue err
+            |> Async.req Req.isTrue err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -330,12 +330,12 @@ let requireFalseTests =
     testList "AsyncResult.requireFalse Tests" [
         testCaseAsync "requireFalse happy path"
         <| (toAsync false
-            |> AsyncResult.requireFalse err
+            |> Async.req Req.isFalse err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireFalse error path"
         <| (toAsync true
-            |> AsyncResult.requireFalse err
+            |> Async.req Req.isFalse err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -344,12 +344,12 @@ let requireSomeTests =
     testList "AsyncResult.requireSome Tests" [
         testCaseAsync "requireSome happy path"
         <| (toAsync (Some 42)
-            |> AsyncResult.requireSome err
+            |> Async.req Req.some err
             |> Expect.hasAsyncOkValue 42)
 
         testCaseAsync "requireSome error path"
         <| (toAsync None
-            |> AsyncResult.requireSome err
+            |> Async.req Req.some err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -358,12 +358,12 @@ let requireSomeWithTests =
     testList "AsyncResult.requireSomeWith Tests" [
         testCaseAsync "requireSomeWith happy path"
         <| (toAsync (Some 42)
-            |> AsyncResult.requireSomeWith (fun () -> err)
+            |> Async.req Req.someWith (fun () -> err)
             |> Expect.hasAsyncOkValue 42)
 
         testCaseAsync "requireSomeWith error path"
         <| (toAsync None
-            |> AsyncResult.requireSomeWith (fun () -> err)
+            |> Async.req Req.someWith (fun () -> err)
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -372,12 +372,12 @@ let requireNoneTests =
     testList "AsyncResult.requireNone Tests" [
         testCaseAsync "requireNone happy path"
         <| (toAsync None
-            |> AsyncResult.requireNone err
+            |> Async.req Req.none err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireNone error path"
         <| (toAsync (Some 42)
-            |> AsyncResult.requireNone err
+            |> Async.req Req.none err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -386,12 +386,12 @@ let requireNoneWithTests =
     testList "AsyncResult.requireNoneWith Tests" [
         testCaseAsync "requireNoneWith happy path"
         <| (toAsync None
-            |> AsyncResult.requireNoneWith (fun () -> err)
+            |> Async.req Req.noneWith (fun () -> err)
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireNoneWith error path"
         <| (toAsync (Some 42)
-            |> AsyncResult.requireNoneWith (fun () -> err)
+            |> Async.req Req.noneWith (fun () -> err)
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -400,12 +400,12 @@ let requireValueSomeTests =
     testList "AsyncResult.requireValueSome Tests" [
         testCaseAsync "requireValueSome happy path"
         <| (toAsync (ValueSome 42)
-            |> AsyncResult.requireValueSome err
+            |> Async.req Req.valueSome err
             |> Expect.hasAsyncOkValue 42)
 
         testCaseAsync "requireValueSome error path"
         <| (toAsync ValueNone
-            |> AsyncResult.requireValueSome err
+            |> Async.req Req.valueSome err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -414,12 +414,12 @@ let requireValueNoneTests =
     testList "AsyncResult.requireValueNone Tests" [
         testCaseAsync "requireValueNone happy path"
         <| (toAsync ValueNone
-            |> AsyncResult.requireValueNone err
+            |> Async.req Req.valueNone err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireValueNone error path"
         <| (toAsync (ValueSome 42)
-            |> AsyncResult.requireValueNone err
+            |> Async.req Req.valueNone err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -428,12 +428,12 @@ let requireEqualToTests =
     testList "AsyncResult.requireEqualTo Tests" [
         testCaseAsync "requireEqualTo happy path"
         <| (toAsync 42
-            |> AsyncResult.requireEqualTo 42 err
+            |> Async.req (Req.equalTo 42) err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireEqualTo error path"
         <| (toAsync 43
-            |> AsyncResult.requireEqualTo 42 err
+            |> Async.req (Req.equalTo 42) err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -441,11 +441,13 @@ let requireEqualToTests =
 let requireEqualTests =
     testList "AsyncResult.requireEqual Tests" [
         testCaseAsync "requireEqual happy path"
-        <| (AsyncResult.requireEqual 42 (toAsync 42) err
+        <| (toAsync 42
+            |> Async.req (Req.equalTo 42) err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireEqual error path"
-        <| (AsyncResult.requireEqual 42 (toAsync 43) err
+        <| (toAsync 43
+            |> Async.req (Req.equalTo 42) err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -454,12 +456,12 @@ let requireEmptyTests =
     testList "AsyncResult.requireEmpty Tests" [
         testCaseAsync "requireEmpty happy path"
         <| (toAsync []
-            |> AsyncResult.requireEmpty err
+            |> Async.req Req.empty err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireEmpty error path"
         <| (toAsync [ 42 ]
-            |> AsyncResult.requireEmpty err
+            |> Async.req Req.empty err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -468,12 +470,12 @@ let requireNotEmptyTests =
     testList "AsyncResult.requireNotEmpty Tests" [
         testCaseAsync "requireNotEmpty happy path"
         <| (toAsync [ 42 ]
-            |> AsyncResult.requireNotEmpty err
+            |> Async.req Req.notEmpty err
             |> Expect.hasAsyncOkValue ())
 
         testCaseAsync "requireNotEmpty error path"
         <| (toAsync []
-            |> AsyncResult.requireNotEmpty err
+            |> Async.req Req.notEmpty err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -482,12 +484,12 @@ let requireHeadTests =
     testList "AsyncResult.requireHead Tests" [
         testCaseAsync "requireHead happy path"
         <| (toAsync [ 42 ]
-            |> AsyncResult.requireHead err
+            |> Async.req Req.head err
             |> Expect.hasAsyncOkValue 42)
 
         testCaseAsync "requireHead error path"
         <| (toAsync []
-            |> AsyncResult.requireHead err
+            |> Async.req Req.head err
             |> Expect.hasAsyncErrorValue err)
     ]
 
@@ -496,29 +498,33 @@ let requireTests =
         testCaseAsync "True, Ok"
         <| async {
             do!
-                AsyncResult.require (fun _ -> true) ("Error!") (AsyncResult.ok (1))
-                |> Expect.hasAsyncOkValue (1)
+                AsyncResult.ok 1
+                |> AsyncResult.reqFilter (fun (_: int) -> true) "Error!"
+                |> Expect.hasAsyncOkValue 1
         }
 
         testCaseAsync "True, Error"
         <| async {
             do!
-                AsyncResult.require (fun _ -> true) ("Error!") (AsyncResult.error ("AHH"))
-                |> Expect.hasAsyncErrorValue ("AHH")
+                AsyncResult.error "AHH"
+                |> AsyncResult.reqFilter (fun (_: int) -> true) "Error!"
+                |> Expect.hasAsyncErrorValue "AHH"
         }
 
         testCaseAsync "False, Ok"
         <| async {
             do!
-                AsyncResult.require (fun _ -> false) ("Error!") (AsyncResult.ok (1))
-                |> Expect.hasAsyncErrorValue ("Error!")
+                AsyncResult.ok 1
+                |> AsyncResult.reqFilter (fun (_: int) -> false) "Error!"
+                |> Expect.hasAsyncErrorValue "Error!"
         }
 
         testCaseAsync "False, Error"
         <| async {
             do!
-                AsyncResult.require (fun _ -> false) ("Error!") (AsyncResult.error ("Ahh"))
-                |> Expect.hasAsyncErrorValue ("Ahh")
+                AsyncResult.error "Ahh"
+                |> AsyncResult.reqFilter (fun (_: int) -> false) "Error!"
+                |> Expect.hasAsyncErrorValue "Ahh"
         }
     ]
 
@@ -865,7 +871,7 @@ let asyncResultCETests =
             ))
 
         testCaseAsync "bind with an Error"
-        <| (createPost (UserId(System.Guid.NewGuid()))
+        <| (createPost (UserId(Guid.NewGuid()))
             |> Expect.hasAsyncErrorValue commonEx)
     ]
 
@@ -959,7 +965,7 @@ let asyncResultBindRequireTests =
             do!
                 Some "john_doe"
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireNone "User exists"
+                |> AsyncResult.req Req.none "User exists"
                 |> Expect.hasAsyncErrorValue "User exists"
         }
 
@@ -968,7 +974,7 @@ let asyncResultBindRequireTests =
             do!
                 Some "john_doe"
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireSome "User doesn't exist"
+                |> AsyncResult.req Req.some "User doesn't exist"
                 |> Expect.hasAsyncOkValue "john_doe"
         }
     ]
@@ -981,7 +987,7 @@ let asyncResultBindRequireValueOptionTests =
             do!
                 ValueSome "john_doe"
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireValueNone "User exists"
+                |> AsyncResult.req Req.valueNone "User exists"
                 |> Expect.hasAsyncErrorValue "User exists"
         }
 
@@ -990,7 +996,7 @@ let asyncResultBindRequireValueOptionTests =
             do!
                 ValueSome "john_doe"
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireValueSome "User doesn't exist"
+                |> AsyncResult.req Req.valueSome "User doesn't exist"
                 |> Expect.hasAsyncOkValue "john_doe"
         }
     ]
@@ -1002,7 +1008,7 @@ let asyncResultBindRequireTrueTests =
             do!
                 true
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireTrue "Should be true"
+                |> AsyncResult.req Req.isTrue "Should be true"
                 |> Expect.hasAsyncOkValue ()
         }
 
@@ -1011,7 +1017,7 @@ let asyncResultBindRequireTrueTests =
             do!
                 false
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireFalse "Should be false"
+                |> AsyncResult.req Req.isFalse "Should be false"
                 |> Expect.hasAsyncOkValue ()
         }
     ]
@@ -1023,7 +1029,7 @@ let asyncResultBindRequireNotNullTests =
             do!
                 ("Test": StringNull)
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireNotNull "Should not be null"
+                |> AsyncResult.req Req.notNull "Should not be null"
                 |> Expect.hasAsyncOkValue "Test"
         }
     ]
@@ -1035,7 +1041,7 @@ let asyncResultBindRequireEqualTests =
             do!
                 2
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireEqual 2 "Should be equal"
+                |> AsyncResult.req (Req.equalTo 2) "Should be equal"
                 |> Expect.hasAsyncOkValue ()
         }
     ]
@@ -1047,7 +1053,7 @@ let asyncResultBindRequireEmptyTests =
             do!
                 []
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireEmpty "Should be empty"
+                |> AsyncResult.req Req.empty "Should be empty"
                 |> Expect.hasAsyncOkValue ()
         }
     ]
@@ -1059,7 +1065,7 @@ let asyncResultBindRequireNotEmptyTests =
             do!
                 [ 1 ]
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireNotEmpty "Should not be empty"
+                |> AsyncResult.req Req.notEmpty "Should not be empty"
                 |> Expect.hasAsyncOkValue ()
         }
     ]
@@ -1071,7 +1077,7 @@ let asyncResultBindRequireHeadTests =
             do!
                 [ 1 ]
                 |> AsyncResult.ok
-                |> AsyncResult.bindRequireHead "Should not be empty"
+                |> AsyncResult.req Req.head "Should not be empty"
                 |> Expect.hasAsyncOkValue 1
         }
     ]
@@ -1081,29 +1087,33 @@ let checkTests =
         testCaseAsync "Ok, Ok"
         <| async {
             do!
-                AsyncResult.check (fun number -> AsyncResult.ok ()) (AsyncResult.ok (1))
-                |> Expect.hasAsyncOkValue (1)
+                AsyncResult.ok 1
+                |> AsyncResult.check (fun _ -> AsyncResult.ok ())
+                |> Expect.hasAsyncOkValue 1
         }
 
         testCaseAsync "Ok, Error"
         <| async {
             do!
-                AsyncResult.check (fun number -> AsyncResult.ok ()) (AsyncResult.error (2))
-                |> Expect.hasAsyncErrorValue (2)
+                AsyncResult.error 2
+                |> AsyncResult.check (fun _ -> AsyncResult.ok ())
+                |> Expect.hasAsyncErrorValue 2
         }
 
         testCaseAsync "Error, OK"
         <| async {
             do!
-                AsyncResult.check (fun number -> AsyncResult.error ()) (AsyncResult.ok (2))
-                |> Expect.hasAsyncErrorValue (())
+                AsyncResult.ok 2
+                |> AsyncResult.check (fun _ -> AsyncResult.error ())
+                |> Expect.hasAsyncErrorValue ()
         }
 
         testCaseAsync "Error, Error"
         <| async {
             do!
-                AsyncResult.check (fun number -> AsyncResult.error (1)) (AsyncResult.error (2))
-                |> Expect.hasAsyncErrorValue (2)
+                AsyncResult.error 2
+                |> AsyncResult.check (fun _ -> AsyncResult.error 1)
+                |> Expect.hasAsyncErrorValue 2
         }
     ]
 

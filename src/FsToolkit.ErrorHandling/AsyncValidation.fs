@@ -161,9 +161,7 @@ module AsyncValidation =
         (input: AsyncValidation<'okInput, 'error>)
         : AsyncValidation<'okOutput, 'error> =
         async {
-            let! input = input
-
-            match input with
+            match! input with
             | Ok x -> return! binder x
             | Error e -> return Error e
         }

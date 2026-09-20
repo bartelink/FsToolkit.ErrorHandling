@@ -319,7 +319,7 @@ let ``TaskResultCE using Tests`` =
 
                 let! actual =
                     taskResult {
-                        use _d = TestHelpers.makeDisposable (fun () -> isFinished <- true)
+                        use _ = TestHelpers.makeDisposable (fun () -> isFinished <- true)
                         return data
                     }
 
@@ -351,7 +351,7 @@ let ``TaskResultCE using Tests`` =
 
                 let! actual =
                     taskResult {
-                        use _d = null
+                        use _ = null
                         return data
                     }
 
@@ -365,7 +365,7 @@ let ``TaskResultCE using Tests`` =
 
                 let! actual =
                     taskResult {
-                        use _d =
+                        use _ =
                             TestHelpers.makeAsyncDisposable (fun () ->
                                 isFinished <- true
                                 ValueTask()
@@ -386,7 +386,7 @@ let ``TaskResultCE using Tests`` =
 
                 let! actual =
                     taskResult {
-                        use _d =
+                        use _ =
                             TestHelpers.makeAsyncDisposable (fun () ->
                                 task {
                                     do! Task.Yield()

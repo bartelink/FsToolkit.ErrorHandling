@@ -7,7 +7,10 @@ Namespace: `FsToolkit.ErrorHandling`
 Provide two functions to execute depending on the value of the option. If the option is `Some`, the first function will be executed. If the option is `None`, the second function will be executed.
 
 ```fsharp
-(onSome : 'input -> 'output) -> (onNone : unit -> 'output) -> (input : Async<'input option>) -> Async<'output>
+(onSome : 'input -> 'output) ->
+    (onNone : unit -> 'output) ->
+    (input : Async<'input option>)
+    -> Async<'output>
 ```
 
 ## Examples

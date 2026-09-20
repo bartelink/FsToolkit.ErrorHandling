@@ -39,8 +39,8 @@ module JobResult =
     /// </summary>
     /// <param name="onOk">The function to apply to the 'ok' value of the input <c>JobResult</c>.</param>
     /// <param name="onError">The function to apply to the 'error' value of the input <c>JobResult</c>.</param>
-    /// <param name="input">The input <c>AsyncResult</c> to map.</param>
-    /// <returns>A new <c>AsyncResult</c> with the mapped values.</returns>
+    /// <param name="input">The input <c>JobResult</c> to map.</param>
+    /// <returns>A new <c>JobResult</c> with the mapped values.</returns>
     let inline eitherMap
         ([<InlineIfLambda>] onOk: 'okInput -> 'okOutput)
         ([<InlineIfLambda>] onError: 'errorInput -> 'errorOutput)
@@ -66,6 +66,7 @@ module JobResult =
         |> Job.catch
         |> Job.map Result.ofChoice
 
+    [<System.Obsolete "Please use JobResult.ok instead of singleton">]
     let inline singleton x = ok x
 
     let inline apply fJR xJR = map2 (fun f x -> f x) fJR xJR
@@ -122,72 +123,6 @@ module JobResult =
     let inline ignore<'ok, 'error> (jr: Job<Result<'ok, 'error>>) : Job<Result<unit, 'error>> =
         jr
         |> map ignore<'ok>
-
-    /// Returns the specified error if the job-wrapped value is false.
-    let inline requireTrue error value =
-        value
-        |> Job.map (Result.requireTrue error)
-
-    /// Returns the specified error if the job-wrapped value is true.
-    let inline requireFalse error value =
-        value
-        |> Job.map (Result.requireFalse error)
-
-    // Converts a job-wrapped Option to a Result, using the given error if None.
-    let inline requireSome error option =
-        option
-        |> Job.map (Result.requireSome error)
-
-    // Converts a job-wrapped Option to a Result, using the given error factory if None.
-    let inline requireSomeWith ([<InlineIfLambda>] errorFactory: unit -> 'error) option =
-        option
-        |> Job.map (Result.requireSomeWith errorFactory)
-
-    // Converts a job-wrapped Option to a Result, using the given error if Some.
-    let inline requireNone error option =
-        option
-        |> Job.map (Result.requireNone error)
-
-    // Converts a job-wrapped Option to a Result, using the given error factory if Some.
-    let inline requireNoneWith ([<InlineIfLambda>] errorFactory: unit -> 'error) option =
-        option
-        |> Job.map (Result.requireNoneWith errorFactory)
-
-    // Converts a job-wrapped ValueOption to a Result, using the given error if ValueNone.
-    let inline requireValueSome error voption =
-        voption
-        |> Job.map (Result.requireValueSome error)
-
-    // Converts a job-wrapped ValueOption to a Result, using the given error if ValueSome.
-    let inline requireValueNone error voption =
-        voption
-        |> Job.map (Result.requireValueNone error)
-
-    /// Returns Ok if the job-wrapped value and the provided value are equal, or the specified error if not.
-    let inline requireEqual x1 x2 error =
-        x2
-        |> Job.map (fun x2' -> Result.requireEqual x1 x2' error)
-
-    /// Returns Ok if the two values are equal, or the specified error if not.
-    let inline requireEqualTo other error this =
-        this
-        |> Job.map (Result.requireEqualTo other error)
-
-    /// Returns Ok if the job-wrapped sequence is empty, or the specified error if not.
-    let inline requireEmpty error xs =
-        xs
-        |> Job.map (Result.requireEmpty error)
-
-    /// Returns Ok if the job-wrapped sequence is not-empty, or the specified error if not.
-    let inline requireNotEmpty error xs =
-        xs
-        |> Job.map (Result.requireNotEmpty error)
-
-    /// Returns the first item of the job-wrapped sequence if it exists, or the specified
-    /// error if the sequence is empty
-    let inline requireHead error xs =
-        xs
-        |> Job.map (Result.requireHead error)
 
     /// Replaces an error value of a job-wrapped result with a custom error
     /// value.
@@ -277,6 +212,19 @@ module JobResult =
         x
         |> Job.result
 
+    /// Returns the Job-wrapped result if it is Ok and the checker returns a Job-wrapped Ok result or if the Job-wrapped result is Error.
+    /// If the checker returns a Job-wrapped Error result, returns the Job-wrapped Error result.
+    let inline check
+        ([<InlineIfLambda>] checker: 'ok -> Job<Result<unit, 'error>>)
+        (x: Job<Result<'ok, 'error>>)
+        : Job<Result<'ok, 'error>> =
+        bind
+            (fun x ->
+                checker x
+                |> map (fun () -> x)
+            )
+            x
+
     /// Bind the JobResult with a synchronous Result-returning function.
     let inline bindResult
         ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
@@ -284,16 +232,59 @@ module JobResult =
         : Job<Result<'output, 'error>> =
         Job.map (Result.bind binder) input
 
-    /// Bind the JobResult and requireSome on the inner option value.
-    let inline bindRequireSome error x = bindResult (Result.requireSome error) x
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value
 
-    /// Bind the JobResult and requireNone on the inner option value.
-    let inline bindRequireNone error x = bindResult (Result.requireNone error) x
+    [<System.Obsolete "Please use JobResult.reqFilter predicate error instead of require predicate error">]
+    let inline require predicate error result = reqFilter predicate error result
 
-    /// Bind the JobResult and requireValueSome on the inner voption value.
-    let inline bindRequireValueSome error x =
-        bindResult (Result.requireValueSome error) x
+    [<System.Obsolete "Please use Job.req Req.isTrue error instead of requireTrue error">]
+    let inline requireTrue error value = Job.req Req.isTrue error value
 
-    /// Bind the JobResult and requireValueNone on the inner voption value.
-    let inline bindRequireValueNone error x =
-        bindResult (Result.requireValueNone error) x
+    [<System.Obsolete "Please use Job.req Req.isFalse error instead of requireFalse error">]
+    let inline requireFalse error value = Job.req Req.isFalse error value
+
+    [<System.Obsolete "Please use Job.req Req.some error instead of requireSome error">]
+    let inline requireSome error value = Job.req Req.some error value
+
+    [<System.Obsolete "Please use Job.req Req.someWith errorF instead of requireSomeWith errorF">]
+    let requireSomeWith errorF value = Job.req Req.someWith errorF value
+
+    [<System.Obsolete "Please use Job.req Req.none error instead of requireNone error">]
+    let inline requireNone error value = Job.req Req.none error value
+
+    [<System.Obsolete "Please use Job.req Req.noneWith errorF instead of requireNoneWith errorF">]
+    let requireNoneWith errorF value = Job.req Req.noneWith errorF value
+
+    [<System.Obsolete "Please use Job.req Req.valueSome error instead of requireValueSome error">]
+    let inline requireValueSome error value = Job.req Req.valueSome error value
+
+    [<System.Obsolete "Please use Job.req Req.valueNone error instead of requireValueNone error">]
+    let inline requireValueNone error value = Job.req Req.valueNone error value
+
+    [<System.Obsolete "Please use Job.req (Req.equalTo other) error instead of requireEqualTo other error">]
+    let inline requireEqualTo other error value = Job.req (Req.equalTo other) error value
+
+    [<System.Obsolete "Please use JobResult.req (Req.equalTo other) error value instead of requireEqual other value error">]
+    let inline requireEqual other value error = req (Req.equalTo other) error value
+
+    [<System.Obsolete "Please use Job.req Req.empty error instead of requireEmpty error">]
+    let inline requireEmpty error value = Job.req Req.empty error value
+
+    [<System.Obsolete "Please use Job.req Req.notEmpty error instead of requireNotEmpty error">]
+    let inline requireNotEmpty error value = Job.req Req.notEmpty error value
+
+    [<System.Obsolete "Please use Job.req Req.head error instead of requireHead error">]
+    let inline requireHead error value = Job.req Req.head error value
+
+    [<System.Obsolete "Please use JobResult.req Req.some error instead of bindRequireSome error">]
+    let inline bindRequireSome error x = req Req.some error x
+
+    [<System.Obsolete "Please use JobResult.req Req.none error instead of bindRequireNone error">]
+    let inline bindRequireNone error x = req Req.none error x
+
+    [<System.Obsolete "Please use JobResult.req Req.valueSome error instead of bindRequireValueSome error">]
+    let inline bindRequireValueSome error x = req Req.valueSome error x
+
+    [<System.Obsolete "Please use JobResult.req Req.valueNone error instead of bindRequireValueNone error">]
+    let inline bindRequireValueNone error x = req Req.valueNone error x

@@ -1484,6 +1484,10 @@ module CancellableValueTaskOption =
     /// <returns>A CancellableValueTaskOption with the item as the result.</returns>
     let inline some x : CancellableValueTaskOption<'a> = fun _ -> ValueTask<'a option>(Some x)
 
+    /// <summary>A CancellableValueTaskOption that yields None.</summary>
+    /// <returns>A CancellableValueTaskOption with None as the result.</returns>
+    let inline none<'a> : CancellableValueTaskOption<'a> =
+        fun _ -> ValueTask<'a option>(None)
 
     /// <summary>Allows chaining of CancellableValueTaskOptions.</summary>
     /// <param name="binder">The continuation.</param>
@@ -1559,7 +1563,7 @@ module CancellableValueTaskOption =
     /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>Some</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>Some</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>None</c>.</param>
-    /// <param name="input">The input <c>CancellableValueTask&lt;'input option&gt;</c>.</param>/
+    /// <param name="input">The input <c>CancellableValueTask&lt;'input option&gt;</c>.</param>
     /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>Some</c>, else returns result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)
@@ -1602,3 +1606,20 @@ module CancellableValueTaskOption =
         : CancellableValueTask<'value> =
         cancellableValueTaskOption
         |> CancellableValueTask.map (Option.defaultWith defThunk)
+
+    /// Bind the CancellableValueTask&lt;'input option&gt; with a synchronous Result-returning function.
+    /// A None input will be mapped to Ok None.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: CancellableValueTask<'input option>)
+        : CancellableValueTask<Result<'output option, 'error>> =
+        CancellableValueTask.bindResult
+            (function
+            | Some x ->
+                binder x
+                |> Result.map Some
+            | None -> Ok None)
+            input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value

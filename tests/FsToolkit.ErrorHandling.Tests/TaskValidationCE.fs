@@ -318,7 +318,7 @@ let ``TaskValidationCE using Tests`` =
 
                 let! actual =
                     taskValidation {
-                        use _d = TestHelpers.makeDisposable (fun () -> isFinished <- true)
+                        use _ = TestHelpers.makeDisposable (fun () -> isFinished <- true)
                         return data
                     }
 
@@ -350,7 +350,7 @@ let ``TaskValidationCE using Tests`` =
 
                 let! actual =
                     taskValidation {
-                        use _d = null
+                        use _ = null
                         return data
                     }
 
@@ -385,7 +385,7 @@ let ``TaskValidationCE using Tests`` =
 
                 let! actual =
                     taskValidation {
-                        use _d =
+                        use _ =
                             TestHelpers.makeAsyncDisposable (fun () ->
                                 task {
                                     do! Task.Yield()

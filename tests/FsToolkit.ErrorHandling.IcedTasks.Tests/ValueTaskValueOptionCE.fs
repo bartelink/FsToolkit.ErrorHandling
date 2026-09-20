@@ -42,25 +42,6 @@ let ceTests =
                 let! actual = valueTaskValueOption { return! ValueNone }
                 Expect.equal actual expected "Should return value wrapped in voption"
             }
-        testCaseTask "either ValueSome"
-        <| fun () ->
-            task {
-                let! actual =
-                    valueTaskValueOption { return 5 }
-                    |> ValueTaskValueOption.either ((+) 2) (fun () -> 42)
-
-                Expect.equal actual 7 ""
-            }
-        testCaseTask "either ValueNone"
-        <| fun () ->
-            task {
-                let! actual =
-                    (ValueTask.FromResult ValueNone: ValueTask<int voption>)
-                    |> ValueTaskValueOption.either ((+) 2) (fun () -> 42)
-
-                Expect.equal actual 42 ""
-            }
-
         testCaseTask "ReturnFrom Async ValueNone"
         <| fun () ->
             task {
@@ -423,9 +404,9 @@ let ceTests =
         <| fun () ->
             task {
                 let items = [
-                    ValueTaskValueOption.valueSome 3
-                    ValueTaskValueOption.valueSome 4
-                    ValueTask<_>(ValueNone)
+                    ValueTaskValueOption.some 3
+                    ValueTaskValueOption.some 4
+                    ValueTaskValueOption.none
                 ]
 
                 let mutable index = 0
@@ -672,8 +653,30 @@ let ``ValueTaskValueOptionCE inference checks`` =
             // Compilation is success
             let f res = valueTaskValueOption { return! res }
 
-            f (ValueTaskValueOption.valueSome ())
+            f (ValueTaskValueOption.some ())
             |> ignore
+    ]
+
+let ``ValueTaskValueOption helpers`` =
+    testList "either" [
+        testCaseTask "either ValueSome"
+        <| fun () ->
+            task {
+                let! actual =
+                    valueTaskValueOption { return 5 }
+                    |> ValueTaskValueOption.either ((+) 2) (fun () -> 42)
+
+                Expect.equal actual 7 ""
+            }
+        testCaseTask "either ValueNone"
+        <| fun () ->
+            task {
+                let! actual =
+                    valueTaskValueOption { return! ValueNone }
+                    |> ValueTaskValueOption.either ((+) 2) (fun () -> 42)
+
+                Expect.equal actual 42 ""
+            }
     ]
 
 [<Tests>]
@@ -683,4 +686,5 @@ let allTests =
         ceTestsApplicative
         ``ValueTaskValueOptionCE while ValueNone async disposal Tests``
         ``ValueTaskValueOptionCE inference checks``
+        ``ValueTaskValueOption helpers``
     ]

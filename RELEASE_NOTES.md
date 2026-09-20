@@ -1,16 +1,33 @@
 ### 6.0.0-beta003 - tba
 
 - fix: Remove erroneous FSharp.Core xmldoc files from pre-`net9.0` packages 
-- feat(Async): Add `ignore`
-- feat(JobResult): Add `ok`
-- feat(AsyncResult, TaskResult, JobResult): Add `bindResult`, `either`
-- feat(CancellableTaskResult, CancellableValueTaskResult, TaskResult): Add `either`, `eitherMap`
-- feat(Result): Add `requireTrueWith`, `requireFalseWith`, `requireValueSomeWith`, `requireValueNoneWith`
-- feat(AsyncResult, TaskResult): Add `bindRequireTrueWith`, `bindRequireFalseWith`, `bindRequireValueSomeWith`, `bindRequireValueNoneWith`
+- feat(Async): `ignore` (coming in FSharp.Core 11)
+- feat(CancellableValueTaskResult, JobResult): `ok`
+- feat(CancellableValueTaskResult): `error`
+- feat(AsyncResultOption, JobResultOption, ResultOption, TaskResultOption, TaskValueOption, ValueTaskValueOption): `some`
+- feat(AsyncOption, AsyncResultOption, CancellableTaskOption, CancellableValueTaskOption, JobResultOption, ResultOption, TaskOption, TaskResultOption, TaskValueOption, ValueTaskValueOption): `none`
+- feat(AsyncResult, CancellableTaskResult, CancellableValueTaskResult, JobResult, TaskResult): Add `either`
+- feat(AsyncResult, CancellableTaskResult, CancellableValueTaskResult, TaskResult): Add `eitherMap`
+- feat(Req): `filter`, `equalTo`, `equal`, `isFalse`, `isTrue`, `some`, `none`, `valueSome`, `valueNone`, `notNull`, `empty`, `notEmpty`, `head`, `check`
+- feat(Req): `filterWith`, `equalToWith`, `equalWith`, `isFalseWith`, `isTrueWith`, `someWith`, `noneWith`, `valueSomeWith`, `valueNoneWith`, `notNullWith`, `emptyWith`, `notEmptyWith`, `headWith`
+- feat(Async, AsyncResult, AsyncResultOption, CancellableTask, CancellableTaskOption, CancellableTaskResult, CancellableValueTask, CancellableValueTaskOption, CancellableValueTaskResult, Job, JobResult, JobResultOption, Task, TaskResult, TaskResultOption, ValueTask, ValueTaskValueOption):
+  - `req` function binding any `Req.<x>` function (replaces having to implement infinite `require<X>` and `bindRequire<X>` functions per computation type, and enables any arbitrary `Req` extension to slot in naturally without requiring it to be built in)
+  - `reqFilter`: shortcut for `req (Req.filter predicate)`
+  - `bindResult` function binding the value to a `Result`-returning function (low level function supporting `req`)
+- OBSOLETE(Result, AsyncResult, TaskResult, JobResult): `require predicate` -> `reqFilter predicate`
+- OBSOLETE(AsyncResult): `require<X>` -> `Async.req Req.<x>`
+- OBSOLETE(JobResult): `require<X>` -> `Job.req Req.<x>`
+- OBSOLETE(Result): `require<X>` -> `Req.<x>`
+- OBSOLETE(TaskResult): `require<X>` -> `Task.req Req.<x>`
+- OBSOLETE(AsyncResult, JobResult, TaskResult): `bindRequire<X>` -> `*Result.req Req.<x>`
 - OBSOLETE(AsyncResult, CancellableTaskResult, TaskResult): `foldResult` (-> `either`)
-- OBSOLETE(Result): `valueOr` (-> `defaultWith`)
-- BREAKING(AsyncOption, TaskOption, CancellableTaskOption, TaskValueOption, ValueTaskValueOption, CancellableValueTaskOption, JobOption)!: Correct `either` signature
-- BREAKING(Task.ignore, Option.ignore)!: Add `RequiresExplicitTypeArguments` to align with FSharp.Core Task/Async
+- OBSOLETE(Result): `valueOr` -> `defaultWith`
+- OBSOLETE(AsyncResultOption, JobResult, JobResultOption, ResultOption, TaskResultOption): `singleton` -> `some`
+- OBSOLETE(AsyncResultOption, TaskResultOption): `ok` -> `some`
+- OBSOLETE(AsyncResultOption, TaskResultOption): `error` -> `*Result.error`
+- OBSOLETE(TaskValueOption, ValueTaskValueOption): `valueSome` -> `some`
+- BREAKING(Task)!: Add `RequiresExplicitTypeArguments` to `ignore` align with FSharp.Core Task/Async
+- BREAKING(AsyncOption, CancellableTaskOption, CancellableValueTaskOption, JobOption, TaskOption, TaskValueOption, ValueTaskValueOption)!: Correct `either` signature
 
 ### 6.0.0-beta002 - September 16, 2026
 

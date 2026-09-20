@@ -280,7 +280,7 @@ let ceTests =
 
                 let! actual =
                     taskValueOption {
-                        use _d = null
+                        use _ = null
                         return data
                     }
 
@@ -295,7 +295,7 @@ let ceTests =
 
                 let! actual =
                     taskValueOption {
-                        use _d = TestHelpers.makeDisposable (fun () -> isFinished <- true)
+                        use _ = TestHelpers.makeDisposable (fun () -> isFinished <- true)
                         return data
                     }
 
@@ -327,7 +327,7 @@ let ceTests =
 
                 let! actual =
                     taskValueOption {
-                        use _d = null
+                        use _ = null
                         return data
                     }
 
@@ -341,7 +341,7 @@ let ceTests =
 
                 let! actual =
                     taskValueOption {
-                        use _d =
+                        use _ =
                             TestHelpers.makeAsyncDisposable (fun () ->
                                 isFinished <- true
                                 ValueTask()
@@ -362,7 +362,7 @@ let ceTests =
 
                 let! actual =
                     taskValueOption {
-                        use _d =
+                        use _ =
                             TestHelpers.makeAsyncDisposable (fun () ->
                                 task {
                                     do! Task.Yield()
@@ -408,8 +408,8 @@ let ceTests =
         <| fun () ->
             task {
                 let items = [
-                    TaskValueOption.valueSome 3
-                    TaskValueOption.valueSome 4
+                    TaskValueOption.some 3
+                    TaskValueOption.some 4
                     Task.singleton ValueNone
                 ]
 
@@ -709,7 +709,7 @@ let ``TaskValueOptionCE inference checks`` =
             // Compilation is success
             let f res = taskValueOption { return! res }
 
-            f (TaskValueOption.valueSome ())
+            f (TaskValueOption.some ())
             |> ignore
     ]
 

@@ -46,12 +46,11 @@ module Async =
         ([<InlineIfLambda>] mapper: 'input -> 'output)
         (input: Async<'input>)
         : Async<'output> =
-        bind
-            (fun x' ->
-                mapper x'
-                |> singleton
-            )
-            input
+        input
+        |> bind (fun x' ->
+            mapper x'
+            |> singleton
+        )
 
     /// <summary>
     /// Applies a transformation to the values of two <c>Async</c> values to a new <c>Async</c> value using the provided function.
@@ -65,16 +64,14 @@ module Async =
         (input1: Async<'input1>)
         (input2: Async<'input2>)
         : Async<'output> =
-        bind
-            (fun x ->
-                bind
-                    (fun y ->
-                        mapper x y
-                        |> singleton
-                    )
-                    input2
+        input1
+        |> bind (fun x ->
+            input2
+            |> bind (fun y ->
+                mapper x y
+                |> singleton
             )
-            input1
+        )
 
     /// <summary>
     /// Applies a transformation to the values of three <c>Async</c> values to a new <c>Async</c> value using the provided function.
@@ -206,6 +203,16 @@ module Async =
             mapper a b c
         )
 
+    /// Bind the Async with a synchronous Result-returning function.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: Async<'input>)
+        : Async<Result<'output, 'error>> =
+        map binder input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value
+
 /// <summary>
 /// Operators for working with the <c>Async</c> type.
 /// </summary>
@@ -243,7 +250,6 @@ module AsyncOperators =
         ([<InlineIfLambda>] binder: 'input -> Async<'output>)
         : Async<'output> =
         Async.bind binder input
-
 
 [<AutoOpen>]
 module AsyncExt =

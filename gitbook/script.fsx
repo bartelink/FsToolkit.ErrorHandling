@@ -19,7 +19,7 @@ open FsToolkit.ErrorHandling
 // string -> Result<int, string>
 let tryParseInt str : Result<int, string> =
     Option.tryParse<int> str
-    |> Result.requireSomeWith (fun () -> $"unable to parse '{str}' to integer")
+    |> Req.someWith (fun () -> $"unable to parse '{str}' to integer")
 
 let result =
     resultOption {

@@ -585,7 +585,7 @@ let ``BackgroundTaskValueOptionCE inference checks`` =
             let f res =
                 backgroundTaskValueOption { return! res }
 
-            f (TaskValueOption.valueSome ())
+            f (TaskValueOption.some ())
             |> ignore
     ]
 

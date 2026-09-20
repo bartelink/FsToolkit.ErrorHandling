@@ -255,6 +255,18 @@ module CancellableTaskResultCE =
         /// </summary>
         let backgroundCancellableTaskResult = BackgroundCancellableTaskResultBuilder()
 
+module CancellableTask =
+    open IcedTasks
+
+    /// Bind the CancellableTask with a synchronous Result-returning function.
+    let inline bindResult
+        ([<InlineIfLambda>] binder: 'input -> Result<'output, 'error>)
+        (input: CancellableTask<'input>)
+        : CancellableTask<Result<'output, 'error>> =
+        CancellableTask.map binder input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value
 
 [<RequireQualifiedAccess>]
 module CancellableTaskResult =
@@ -303,7 +315,7 @@ module CancellableTaskResult =
         : CancellableTask<'output> =
         CancellableTask.map (Result.either onOk onError) input
 
-    [<System.Obsolete "Use CancellableTaskResult.either instead (renamed to align with Result naming)">]
+    [<System.Obsolete "Please use either instead of foldResult (renamed to align with Result naming)">]
     let foldResult = either
 
     /// <summary>
@@ -390,3 +402,13 @@ module CancellableTaskResult =
             let! r2 = r2
             return Result.zip r1 r2
         }
+
+    /// Bind the CancellableTaskResult with a synchronous Result-returning function
+    let inline bindResult
+        ([<InlineIfLambda>] reqF: 'input -> Result<'output, 'error>)
+        (input: CancellableTask<Result<'input, 'error>>)
+        : CancellableTask<Result<'output, 'error>> =
+        CancellableTask.bindResult (Result.bind reqF) input
+
+    let req reqF errOrF value = bindResult (reqF errOrF) value
+    let reqFilter predicate errOrF value = req (Req.filter predicate) errOrF value

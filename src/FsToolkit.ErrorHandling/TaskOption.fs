@@ -6,6 +6,14 @@ open System.Threading.Tasks
 [<RequireQualifiedAccess>]
 module TaskOption =
 
+    /// <summary>Lifts an item to a Task.</summary>
+    /// <param name="x">The item to be the result of the Task.</param>
+    /// <returns>A Task with the item as the result.</returns>
+    let inline some x = Task.singleton (Some x)
+    /// <summary>A Task that yields None.</summary>
+    /// <returns>A Task with None as the result.</returns>
+    let inline none<'a> : Task<'a option> = Task.singleton None
+
     let inline map ([<InlineIfLambda>] f) ar = Task.map (Option.map f) ar
 
     let inline bind ([<InlineIfLambda>] f) (ar: Task<_>) =
@@ -20,8 +28,6 @@ module TaskOption =
             return! t
         }
 
-    let inline some x = Task.singleton (Some x)
-
     let inline apply f x =
         bind (fun f' -> bind (fun x' -> some (f' x')) x) f
 
@@ -33,7 +39,7 @@ module TaskOption =
     /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>Some</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>Some</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>None</c>.</param>
-    /// <param name="input">The input <c>Task&lt;'input option&gt;</c>.</param>/
+    /// <param name="input">The input <c>Task&lt;'input option&gt;</c>.</param>
     /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>Some</c>, else returns result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)

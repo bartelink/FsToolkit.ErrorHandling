@@ -3,6 +3,14 @@ namespace FsToolkit.ErrorHandling
 [<RequireQualifiedAccess>]
 module AsyncOption =
 
+    /// <summary>Lifts an item to an Async.</summary>
+    /// <param name="x">The item to be the result of the Async.</param>
+    /// <returns>An Async with the item as the result.</returns>
+    let inline some x = Async.singleton (Some x)
+    /// <summary>An Async that yields None.</summary>
+    /// <returns>An Async with None as the result.</returns>
+    let inline none<'a> : Async<'a option> = Async.singleton None
+
     let inline map
         ([<InlineIfLambda>] mapper: 'input -> 'output)
         (input: Async<'input option>)
@@ -13,15 +21,12 @@ module AsyncOption =
         ([<InlineIfLambda>] binder: 'input -> Async<'output option>)
         (input: Async<'input option>)
         : Async<'output option> =
-        Async.bind
-            (fun x ->
-                match x with
-                | Some x -> binder x
-                | None -> Async.singleton None
-            )
-            input
-
-    let inline some (value: 'value) : Async<'value option> = Async.singleton (Some value)
+        input
+        |> Async.bind (fun x ->
+            match x with
+            | Some x -> binder x
+            | None -> none
+        )
 
     let inline apply
         (applier: Async<('input -> 'output) option>)
@@ -29,10 +34,10 @@ module AsyncOption =
         : Async<'output option> =
         bind (fun f' -> bind (fun x' -> some (f' x')) input) applier
 
-    /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>ValueSome</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
+    /// <summary>Applies <paramref name="onSome"/> to the input if it is <c>Some</c>, otherwise returns result of running <paramref name="onNone"/>.</summary>
     /// <param name="onSome">The function to apply if <paramref name="input"/> is <c>Some</c>.</param>
     /// <param name="onNone">The function to run if <paramref name="input"/> is <c>None</c>.</param>
-    /// <param name="input">The input <c>Async&lt;'input option&gt;</c>.</param>/
+    /// <param name="input">The input <c>Async&lt;'input option&gt;</c>.</param>
     /// <returns>The result of applying <paramref name="onSome"/> if the input is <c>Some</c>, else returns result of running <paramref name="onNone"/>.</returns>
     let inline either
         ([<InlineIfLambda>] onSome: 'input -> 'output)

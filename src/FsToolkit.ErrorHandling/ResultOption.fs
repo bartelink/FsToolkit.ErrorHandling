@@ -9,9 +9,13 @@ module ResultOption =
     /// <summary>
     /// Converts a value to a value into a <c>Result</c> which contains the value wrapped in an <c>Option</c>.
     /// </summary>
-    /// <param name="x">The value to convert.</param>
+    /// <param name="value">The value to convert.</param>
     /// <returns>The value wrapped in an <c>Option</c> and then wrapped in a <c>Result</c>.</returns>
-    let inline singleton x = Ok(Some x)
+    let inline some value = Ok(Some value)
+    let inline none<'ok, 'error> : Result<'ok option, 'error> = Ok None
+
+    [<System.Obsolete "Please use some instead of singleton">]
+    let inline singleton (value: 'ok) : Result<'ok option, 'error> = some value
 
     /// <summary>
     /// Applies a transformation function to a <c>Result</c> value that contains an <c>Option</c> value.
@@ -53,11 +57,12 @@ module ResultOption =
         ([<InlineIfLambda>] binder: 'okInput -> Result<'okOutput option, 'error>)
         (input: Result<'okInput option, 'error>)
         : Result<'okOutput option, 'error> =
-        Result.bind
-            (function
+        input
+        |> Result.bind (
+            function
             | Some x -> binder x
-            | None -> Ok None)
-            input
+            | None -> Ok None
+        )
 
     /// <summary>
     /// Applies a transformation function to a <c>Result</c> value that contains an <c>Option</c> value and returns the result wrapped in an <c>Option</c> within a <c>Result</c>.

@@ -27,7 +27,6 @@ module CancellableValueTaskResultCE =
             member this.Dispose() = ()
         }
 
-
     [<Tests>]
     let cancellableValueTaskResultBuilderTests =
         testList "CancellableValueTaskResultBuilder" [
@@ -354,61 +353,6 @@ module CancellableValueTaskResultCE =
                     }
             ]
 
-            testList "branch mappers" [
-                testCaseTask "either Ok"
-                <| fun () ->
-                    task {
-                        let input = fun _ -> ValueTask<Result<int, string>>(Ok 5)
-
-                        let! actual =
-                            input
-                            |> CancellableValueTaskResult.either (fun x -> string (x + 2)) id
-                            |> fun value -> value CancellationToken.None
-                            |> _.AsTask()
-
-                        Expect.equal "7" actual ""
-                    }
-                testCaseTask "either Error"
-                <| fun () ->
-                    task {
-                        let input = fun _ -> ValueTask<Result<int, string>>(Error "bad")
-
-                        let! actual =
-                            input
-                            |> CancellableValueTaskResult.either string id
-                            |> fun value -> value CancellationToken.None
-                            |> _.AsTask()
-
-                        Expect.equal "bad" actual ""
-                    }
-                testCaseTask "eitherMap Ok"
-                <| fun () ->
-                    task {
-                        let input = fun _ -> ValueTask<Result<int, string>>(Ok 5)
-
-                        let! actual =
-                            input
-                            |> CancellableValueTaskResult.eitherMap (fun x -> x + 2) id
-                            |> fun value -> value CancellationToken.None
-                            |> _.AsTask()
-
-                        Expect.equal (Ok 7) actual ""
-                    }
-                testCaseTask "eitherMap Error"
-                <| fun () ->
-                    task {
-                        let input = fun _ -> ValueTask<Result<int, string>>(Error "bad")
-
-                        let! actual =
-                            input
-                            |> CancellableValueTaskResult.eitherMap id String.length
-                            |> fun value -> value CancellationToken.None
-                            |> _.AsTask()
-
-                        Expect.equal (Error 3) actual ""
-                    }
-            ]
-
             testList "try/with" [
                 testCaseTask "try/with - no exception"
                 <| fun () ->
@@ -417,7 +361,7 @@ module CancellableValueTaskResultCE =
                             cancellableValueTaskResult {
                                 try
                                     return 42
-                                with ex ->
+                                with _ ->
                                     return -1
                             }
 
@@ -433,7 +377,7 @@ module CancellableValueTaskResultCE =
                                 try
                                     failwith "test"
                                     return 42
-                                with ex ->
+                                with _ ->
                                     return -1
                             }
 
@@ -441,17 +385,60 @@ module CancellableValueTaskResultCE =
                         Expect.equal actual (Ok -1) "Should return -1 when exception is thrown"
                     }
             ]
+        ]
 
-            testList "backgroundCancellableValueTaskResult" [
-                testCaseTask "return"
+    [<Tests>]
+    let cancellableValueTaskResult =
+        testList "CancellableValueTaskResult" [
+            testList "branch mappers" [
+                testCase "either Ok"
                 <| fun () ->
-                    task {
-                        let data = 42
+                    let computation =
+                        CancellableValueTaskResult.singleton 5
+                        |> CancellableValueTaskResult.either (fun x -> string (x + 2)) id
 
-                        let ctr = backgroundCancellableValueTaskResult { return data }
+                    let actual = (computation CancellationToken.None).Result
 
-                        let! actual = (ctr CancellationToken.None).AsTask()
-                        Expect.equal actual (Ok data) "Should be able to Return value"
-                    }
+                    Expect.equal "7" actual ""
+                testCase "either Error"
+                <| fun () ->
+                    let computation =
+                        CancellableValueTaskResult.error "bad"
+                        |> CancellableValueTaskResult.either string id
+
+                    let actual = (computation CancellationToken.None).Result
+
+                    Expect.equal "bad" actual ""
+                testCase "eitherMap Ok"
+                <| fun () ->
+                    let computation =
+                        CancellableValueTaskResult.ok 5
+                        |> CancellableValueTaskResult.eitherMap (fun x -> x + 2) id
+
+                    let actual = (computation CancellationToken.None).Result
+                    Expect.equal (Ok 7) actual ""
+                testCase "eitherMap Error"
+                <| fun () ->
+                    let computation =
+                        CancellableValueTaskResult.error "bad"
+                        |> CancellableValueTaskResult.eitherMap id String.length
+
+                    let actual = (computation CancellationToken.None).Result
+                    Expect.equal (Error 3) actual ""
             ]
+        ]
+
+    [<Tests>]
+    let backgroundCancellableValueTaskResult =
+        testList "backgroundCancellableValueTaskResult" [
+            testCaseTask "return"
+            <| fun () ->
+                task {
+                    let data = 42
+
+                    let ctr = backgroundCancellableValueTaskResult { return data }
+
+                    let! actual = (ctr CancellationToken.None).AsTask()
+                    Expect.equal actual (Ok data) "Should be able to Return value"
+                }
         ]

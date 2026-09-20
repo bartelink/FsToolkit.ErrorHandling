@@ -113,8 +113,8 @@ module Validation =
         : Validation<'okOutput, 'error> =
         match input1, input2, input3 with
         | Ok x, Ok y, Ok z -> Ok(mapper x y z)
-        | Error errs, Ok _, Ok _ -> Error errs
-        | Ok _, Error errs, Ok _ -> Error errs
+        | Error errs, Ok _, Ok _
+        | Ok _, Error errs, Ok _
         | Ok _, Ok _, Error errs -> Error errs
         | Error errs1, Error errs2, Ok _ ->
             Error(

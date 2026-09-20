@@ -88,10 +88,10 @@ let applyTests =
     ]
 
 let valueSomeTests =
-    testList "TaskValueOption.valueSome Tests" [
+    testList "TaskValueOption.some Tests" [
         testCase "valueSome with x"
         <| fun _ ->
-            TaskValueOption.valueSome 267
+            TaskValueOption.some 267
             |> Expect.hasTaskValueSomeValue 267
     ]
 
@@ -128,7 +128,7 @@ let eitherTests =
         testCaseTask "ValueSome"
         <| fun () ->
             task {
-                let value1 = TaskValueOption.valueSome 5
+                let value1 = TaskValueOption.some 5
                 let f () = 42
                 let add2 x = x + 2
 
@@ -161,7 +161,7 @@ let defaultValueTests =
                 let defaultValue = 10
                 let expectedValue = 5
 
-                let taskValueOption = TaskValueOption.valueSome expectedValue
+                let taskValueOption = TaskValueOption.some expectedValue
                 let! result = TaskValueOption.defaultValue defaultValue taskValueOption
                 Expect.equal result expectedValue ""
             }
@@ -184,7 +184,7 @@ let defaultWithTests =
                 let defaultValue = 10
                 let expectedValue = 5
 
-                let taskValueOption = TaskValueOption.valueSome expectedValue
+                let taskValueOption = TaskValueOption.some expectedValue
                 let! result = TaskValueOption.defaultWith (fun () -> defaultValue) taskValueOption
                 Expect.equal result expectedValue ""
             }

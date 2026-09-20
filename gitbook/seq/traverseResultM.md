@@ -22,7 +22,7 @@ See also Scott Wlaschin's [Understanding traverse and sequence](https://fsharpfo
 // string -> Result<int, string>
 let tryParseInt str =
     Option.tryParse<int> str
-    |> Result.requireSomeWith (fun () -> $"unable to parse '{str}' to integer")
+    |> Req.someWith (fun () -> $"unable to parse '{str}' to integer")
 
 ["1"; "2"; "3"]
 |> Seq.traverseResultM tryParseInt 

@@ -32,7 +32,7 @@ let allowedToPost =
     >> Async.StartImmediateAsTask
 
 let mapTests =
-    testList "TaskResult.map tests" [
+    testList "Task.map tests" [
         testCase "map with Task(Ok x)"
         <| fun _ ->
             createPostSuccess validCreatePostRequest
@@ -150,7 +150,7 @@ let bindResultTests =
             task {
                 let! actual =
                     TaskResult.error "upstream"
-                    |> TaskResult.bindResult Ok
+                    |> TaskResult.bindResult (fun value -> Ok(value + 1))
 
                 Expect.equal actual (Error "upstream") ""
             }
@@ -169,27 +169,27 @@ let bindResultTests =
             task {
                 let! some =
                     TaskResult.ok (Some 1)
-                    |> TaskResult.bindRequireSomeWith (fun () -> "none")
+                    |> TaskResult.req Req.someWith (fun () -> "none")
 
                 let! none =
                     TaskResult.ok None
-                    |> TaskResult.bindRequireNoneWith (fun () -> "some")
+                    |> TaskResult.req Req.noneWith (fun () -> "some")
 
                 let! valueSome =
                     TaskResult.ok (ValueSome 1)
-                    |> TaskResult.bindRequireValueSomeWith (fun () -> "none")
+                    |> TaskResult.req Req.valueSomeWith (fun () -> "none")
 
                 let! valueNone =
                     TaskResult.ok ValueNone
-                    |> TaskResult.bindRequireValueNoneWith (fun () -> "some")
+                    |> TaskResult.req Req.valueNoneWith (fun () -> "some")
 
                 let! trueValue =
                     TaskResult.ok true
-                    |> TaskResult.bindRequireTrueWith (fun () -> "false")
+                    |> TaskResult.req Req.isTrueWith (fun () -> "false")
 
                 let! falseValue =
                     TaskResult.ok false
-                    |> TaskResult.bindRequireFalseWith (fun () -> "true")
+                    |> TaskResult.req Req.isFalseWith (fun () -> "true")
 
                 Expect.equal some (Ok 1) ""
                 Expect.equal none (Ok()) ""
@@ -303,13 +303,13 @@ let requireTrueTests =
         testCase "requireTrue happy path"
         <| fun _ ->
             toTask true
-            |> TaskResult.requireTrue err
+            |> Task.req Req.isTrue err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireTrue error path"
         <| fun _ ->
             toTask false
-            |> TaskResult.requireTrue err
+            |> Task.req Req.isTrue err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -318,13 +318,13 @@ let requireFalseTests =
         testCase "requireFalse happy path"
         <| fun _ ->
             toTask false
-            |> TaskResult.requireFalse err
+            |> Task.req Req.isFalse err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireFalse error path"
         <| fun _ ->
             toTask true
-            |> TaskResult.requireFalse err
+            |> Task.req Req.isFalse err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -333,13 +333,13 @@ let requireSomeTests =
         testCase "requireSome happy path"
         <| fun _ ->
             toTask (Some 42)
-            |> TaskResult.requireSome err
+            |> Task.req Req.some err
             |> Expect.hasTaskOkValueSync 42
 
         testCase "requireSome error path"
         <| fun _ ->
             toTask None
-            |> TaskResult.requireSome err
+            |> Task.req Req.some err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -348,13 +348,13 @@ let requireSomeWithTests =
         testCase "requireSomeWith happy path"
         <| fun _ ->
             toTask (Some 42)
-            |> TaskResult.requireSomeWith (fun () -> err)
+            |> Task.req Req.someWith (fun () -> err)
             |> Expect.hasTaskOkValueSync 42
 
         testCase "requireSomeWith error path"
         <| fun _ ->
             toTask None
-            |> TaskResult.requireSomeWith (fun () -> err)
+            |> Task.req Req.someWith (fun () -> err)
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -363,13 +363,13 @@ let requireNoneTests =
         testCase "requireNone happy path"
         <| fun _ ->
             toTask None
-            |> TaskResult.requireNone err
+            |> Task.req Req.none err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireNone error path"
         <| fun _ ->
             toTask (Some 42)
-            |> TaskResult.requireNone err
+            |> Task.req Req.none err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -378,13 +378,13 @@ let requireNoneWithTests =
         testCase "requireNoneWith happy path"
         <| fun _ ->
             toTask None
-            |> TaskResult.requireNoneWith (fun () -> err)
+            |> Task.req Req.noneWith (fun () -> err)
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireNoneWith error path"
         <| fun _ ->
             toTask (Some 42)
-            |> TaskResult.requireNoneWith (fun () -> err)
+            |> Task.req Req.noneWith (fun () -> err)
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -393,13 +393,13 @@ let requireValueSomeTests =
         testCase "requireValueSome happy path"
         <| fun _ ->
             toTask (ValueSome 42)
-            |> TaskResult.requireValueSome err
+            |> Task.req Req.valueSomeWith (fun () -> err)
             |> Expect.hasTaskOkValueSync 42
 
         testCase "requireValueSome error path"
         <| fun _ ->
             toTask ValueNone
-            |> TaskResult.requireValueSome err
+            |> Task.req Req.valueSome err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -408,13 +408,13 @@ let requireValueNoneTests =
         testCase "requireValueNone happy path"
         <| fun _ ->
             toTask ValueNone
-            |> TaskResult.requireValueNone err
+            |> Task.req Req.valueNone err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireValueNone error path"
         <| fun _ ->
             toTask (ValueSome 42)
-            |> TaskResult.requireValueNone err
+            |> Task.req Req.valueNone err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -423,13 +423,13 @@ let requireEqualToTests =
         testCase "requireEqualTo happy path"
         <| fun _ ->
             toTask 42
-            |> TaskResult.requireEqualTo 42 err
+            |> Task.req (Req.equalTo 42) err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireEqualTo error path"
         <| fun _ ->
             toTask 43
-            |> TaskResult.requireEqualTo 42 err
+            |> Task.req (Req.equalTo 42) err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -437,12 +437,14 @@ let requireEqualTests =
     testList "TaskResult.requireEqual Tests" [
         testCase "requireEqual happy path"
         <| fun _ ->
-            TaskResult.requireEqual 42 (toTask 42) err
+            toTask 42
+            |> Task.req (Req.equalTo 42) err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireEqual error path"
         <| fun _ ->
-            TaskResult.requireEqual 42 (toTask 43) err
+            toTask 43
+            |> Task.req (Req.equalTo 42) err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -451,13 +453,13 @@ let requireEmptyTests =
         testCase "requireEmpty happy path"
         <| fun _ ->
             toTask []
-            |> TaskResult.requireEmpty err
+            |> Task.req Req.empty err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireEmpty error path"
         <| fun _ ->
             toTask [ 42 ]
-            |> TaskResult.requireEmpty err
+            |> Task.req Req.empty err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -466,13 +468,13 @@ let requireNotEmptyTests =
         testCase "requireNotEmpty happy path"
         <| fun _ ->
             toTask [ 42 ]
-            |> TaskResult.requireNotEmpty err
+            |> Task.req Req.notEmpty err
             |> Expect.hasTaskOkValueSync ()
 
         testCase "requireNotEmpty error path"
         <| fun _ ->
             toTask []
-            |> TaskResult.requireNotEmpty err
+            |> Task.req Req.notEmpty err
             |> Expect.hasTaskErrorValueSync err
     ]
 
@@ -481,23 +483,32 @@ let requireHeadTests =
         testCase "requireHead happy path"
         <| fun _ ->
             toTask [ 42 ]
-            |> TaskResult.requireHead err
+            |> Task.req Req.head err
             |> Expect.hasTaskOkValueSync 42
 
         testCase "requireHead error path"
         <| fun _ ->
             toTask []
-            |> TaskResult.requireHead err
+            |> Task.req Req.head err
             |> Expect.hasTaskErrorValueSync err
     ]
 
 let taskResultRequireTests =
     testList "TaskResult.require Tests" [
-        testCaseTask "True, Ok"
+        testCaseTask "True, Ok (general pattern)"
         <| fun _ ->
             task {
                 do!
-                    TaskResult.require (fun _ -> true) "Error!" (TaskResult.ok 1)
+                    TaskResult.ok 1
+                    |> TaskResult.reqFilter (fun (_: int) -> true) "Error!"
+                    |> Expect.hasTaskOkValue 1
+            }
+        testCaseTask "True, Ok (using reqFilter helper)"
+        <| fun _ ->
+            task {
+                do!
+                    TaskResult.ok 1
+                    |> TaskResult.reqFilter (fun (_: int) -> true) "Error!"
                     |> Expect.hasTaskOkValue 1
             }
 
@@ -505,7 +516,8 @@ let taskResultRequireTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.require (fun _ -> true) "Error!" (TaskResult.error "AHH")
+                    TaskResult.error "AHH"
+                    |> TaskResult.reqFilter (fun (_: int) -> true) "Error!"
                     |> Expect.hasTaskErrorValue "AHH"
             }
 
@@ -513,7 +525,8 @@ let taskResultRequireTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.require (fun _ -> false) "Error!" (TaskResult.ok 1)
+                    TaskResult.ok 1
+                    |> TaskResult.reqFilter (fun (_: int) -> false) "Error!"
                     |> Expect.hasTaskErrorValue "Error!"
             }
 
@@ -521,7 +534,8 @@ let taskResultRequireTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.require (fun _ -> false) "Error!" (TaskResult.error "Ahh")
+                    TaskResult.error "Ahh"
+                    |> TaskResult.reqFilter (fun (_: int) -> false) "Error!"
                     |> Expect.hasTaskErrorValue "Ahh"
             }
     ]
@@ -946,7 +960,7 @@ let TaskResultBindRequireTests =
                 do!
                     Some "john_doe"
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireNone "User exists"
+                    |> TaskResult.req Req.none "User exists"
                     |> Expect.hasTaskErrorValue "User exists"
             }
 
@@ -956,7 +970,7 @@ let TaskResultBindRequireTests =
                 do!
                     Some "john_doe"
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireSome "User doesn't exist"
+                    |> TaskResult.req Req.some "User doesn't exist"
                     |> Expect.hasTaskOkValue "john_doe"
             }
     ]
@@ -969,7 +983,7 @@ let TaskResultBindRequireValueOptionTests =
                 do!
                     ValueSome "john_doe"
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireValueNone "User exists"
+                    |> TaskResult.req Req.valueNone "User exists"
                     |> Expect.hasTaskErrorValue "User exists"
             }
 
@@ -979,7 +993,7 @@ let TaskResultBindRequireValueOptionTests =
                 do!
                     ValueSome "john_doe"
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireValueSome "User doesn't exist"
+                    |> TaskResult.req Req.valueSome "User doesn't exist"
                     |> Expect.hasTaskOkValue "john_doe"
             }
     ]
@@ -1033,7 +1047,7 @@ let taskResultBindRequireTrueTests =
                 do!
                     true
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireTrue "Should be true"
+                    |> TaskResult.req Req.isTrue "Should be true"
                     |> Expect.hasTaskOkValue ()
             }
 
@@ -1043,7 +1057,7 @@ let taskResultBindRequireTrueTests =
                 do!
                     false
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireFalse "Should be false"
+                    |> TaskResult.req Req.isFalse "Should be false"
                     |> Expect.hasTaskOkValue ()
             }
     ]
@@ -1056,7 +1070,7 @@ let taskResultBindRequireNotNullTests =
                 do!
                     ("Test": StringNull)
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireNotNull "Should not be null"
+                    |> TaskResult.req Req.notNull "Should not be null"
                     |> Expect.hasTaskOkValue "Test"
             }
     ]
@@ -1067,9 +1081,9 @@ let taskResultBindRequireEqualTests =
         <| fun _ ->
             task {
                 do!
-                    2
-                    |> TaskResult.ok
-                    |> TaskResult.bindRequireEqual 2 "Should be equal"
+                    TaskResult.ok 2
+                    // NOTE bug in original
+                    |> TaskResult.req (Req.equalTo 2) "Should be equal"
                     |> Expect.hasTaskOkValue ()
             }
     ]
@@ -1080,9 +1094,8 @@ let taskResultBindRequireEmptyTests =
         <| fun _ ->
             task {
                 do!
-                    []
-                    |> TaskResult.ok
-                    |> TaskResult.bindRequireEmpty "Should be empty"
+                    TaskResult.ok []
+                    |> TaskResult.req Req.empty "Should be empty"
                     |> Expect.hasTaskOkValue ()
             }
     ]
@@ -1095,7 +1108,7 @@ let taskResultBindRequireNotEmptyTests =
                 do!
                     [ 1 ]
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireNotEmpty "Should not be empty"
+                    |> TaskResult.req Req.notEmpty "Should not be empty"
                     |> Expect.hasTaskOkValue ()
             }
     ]
@@ -1108,7 +1121,7 @@ let taskResultBindRequireHeadTests =
                 do!
                     [ 1 ]
                     |> TaskResult.ok
-                    |> TaskResult.bindRequireHead "Should not be empty"
+                    |> TaskResult.req Req.head "Should not be empty"
                     |> Expect.hasTaskOkValue 1
             }
     ]
@@ -1119,7 +1132,8 @@ let taskResultCheckTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.check (fun _ -> TaskResult.ok ()) (TaskResult.ok 1)
+                    TaskResult.ok 1
+                    |> TaskResult.check (fun _ -> TaskResult.ok ())
                     |> Expect.hasTaskOkValue 1
             }
 
@@ -1127,7 +1141,8 @@ let taskResultCheckTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.check (fun _ -> TaskResult.ok ()) (TaskResult.error 2)
+                    TaskResult.error 2
+                    |> TaskResult.check (fun _ -> TaskResult.ok ())
                     |> Expect.hasTaskErrorValue 2
             }
 
@@ -1135,7 +1150,8 @@ let taskResultCheckTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.check (fun _ -> TaskResult.error ()) (TaskResult.ok 2)
+                    TaskResult.ok 2
+                    |> TaskResult.check (fun _ -> TaskResult.error ())
                     |> Expect.hasTaskErrorValue ()
             }
 
@@ -1143,7 +1159,8 @@ let taskResultCheckTests =
         <| fun _ ->
             task {
                 do!
-                    TaskResult.check (fun _ -> TaskResult.error 1) (TaskResult.error 2)
+                    TaskResult.error 2
+                    |> TaskResult.check (fun _ -> TaskResult.error 1)
                     |> Expect.hasTaskErrorValue 2
             }
     ]

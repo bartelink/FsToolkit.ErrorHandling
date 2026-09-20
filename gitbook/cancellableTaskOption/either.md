@@ -9,7 +9,7 @@ Provide two functions to execute depending on the value of the option. If the op
 ```fsharp
 (onSome : 'input -> 'output) 
 	-> (onNone : unit -> 'output) 
-	-> (input : 'input option) 
+	-> (input : CancellableTask<'input option>) 
 	-> CancellableTask<'output>
 ```
 
@@ -27,7 +27,7 @@ CancellableTaskOption.some 5
 ### Example 2
 
 ```fsharp
-CancellableTask.singleton None
+CancellableTaskOption.none
 |> CancellableTaskOption.either (fun x -> x * 2) (fun () -> 0) 
 
 // cancellableTask { 0 }

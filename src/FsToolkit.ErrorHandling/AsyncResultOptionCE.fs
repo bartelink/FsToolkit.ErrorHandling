@@ -8,7 +8,7 @@ module AsyncResultOptionCE =
 
     type AsyncResultOptionBuilder() =
         member inline _.Return(value: 'ok) : AsyncResultOption<'ok, 'error> =
-            AsyncResultOption.singleton value
+            AsyncResultOption.some value
 
         member inline _.ReturnFrom
             (value: Async<Result<'ok option, 'error>>)
@@ -28,7 +28,7 @@ module AsyncResultOptionCE =
 
         member inline _.Delay([<InlineIfLambda>] f: unit -> Async<'a>) : Async<'a> = async.Delay f
 
-        member inline _.Zero() = AsyncResult.ok (Some())
+        member inline _.Zero() = AsyncResultOption.some ()
 
         member inline _.TryWith
             (
