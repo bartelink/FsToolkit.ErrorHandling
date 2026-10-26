@@ -23,6 +23,7 @@ let allTests =
         ListTests.allTests
         ArrayTests.allTests
         SeqTests.allTests
+        AsyncTests.asyncAwaitTests
         AsyncResultTests.allTests
         AsyncResultCETests.allTests
         AsyncResultOptionTests.allTests

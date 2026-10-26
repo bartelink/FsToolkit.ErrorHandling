@@ -3,18 +3,19 @@
 // - namespace is FsToolkit.ErrorHandling instead of Microsoft.FSharp.Control.
 // - The TaskLike Await and StartTaskImmediate overloads are omitted.
 // - Await is custom-written as the production implementation relies on internal FSharp.Core APIs.
+//   - The Shim version has an extra throw-rethrow stacktrace frame, but is consistent wrt the other key behaviors:
+//     1. Single-exception tasks are unwrapped and rethrown.
+//     2. Cancellation surfaces as TaskCanceledException [and per normal async semantics is not catchable]
 [<AutoOpen>]
 module FsToolkit.ErrorHandling.FSharpCore11AsyncShims
 
 open System.Threading
 open System.Threading.Tasks
 
-(* START FSharp.Core v11 shims *)
-
-// NOTE each Await overload fails on including level2Task in the stacktrace in AsyncAwaitStackTraceTests
-
 #if !FABLE_COMPILER
 #nowarn "3261" // error FS3261: Nullness warning: The types 'System.AggregateException' and 'System.AggregateException | null' do not have compatible nullability.
+#endif
+
 type Async with
 
     /// <summary>Creates an asynchronous computation that will wait for the given task to complete and return
@@ -60,22 +61,12 @@ type Async with
     /// </example>
     [<System.Diagnostics.DebuggerStepThrough>]
     static member Await(task: Task<'T>) : Async<'T> =
-        Async.FromContinuations(fun (sc, ec, _cc) ->
-            task.ContinueWith(fun (t: Task<'T>) ->
-                if t.IsFaulted then
-                    let e = t.Exception
-
-                    if e.InnerExceptions.Count = 1 then
-                        ec e.InnerExceptions[0]
-                    else
-                        ec e
-                elif t.IsCanceled then
-                    ec (TaskCanceledException(task))
-                else
-                    sc t.Result
-            )
-            |> ignore
-        )
+        async {
+            try
+                return! Async.AwaitTask task
+            with :? System.AggregateException as e when e.InnerExceptions.Count = 1 ->
+                return raise e.InnerExceptions[0]
+        }
 
     /// <summary>Creates an asynchronous computation that will wait for the given task to complete.</summary>
     /// <param name="task">The task to await.</param>
@@ -114,22 +105,12 @@ type Async with
     /// </example>
     [<System.Diagnostics.DebuggerStepThrough>]
     static member Await(task: Task) : Async<unit> =
-        Async.FromContinuations(fun (sc, ec, _cc) ->
-            task.ContinueWith(fun (task: Task) ->
-                if task.IsFaulted then
-                    let e = task.Exception
-
-                    if e.InnerExceptions.Count = 1 then
-                        ec e.InnerExceptions[0]
-                    else
-                        ec e
-                elif task.IsCanceled then
-                    ec (TaskCanceledException(task))
-                else
-                    sc ()
-            )
-            |> ignore
-        )
+        async {
+            try
+                return! Async.AwaitTask task
+            with :? System.AggregateException as e when e.InnerExceptions.Count = 1 ->
+                return raise e.InnerExceptions[0]
+        }
 
     static member Await(task: ValueTask) : Async<unit> = Async.Await(task.AsTask())
     static member Await(task: ValueTask<'t>) : Async<'t> = Async.Await(task.AsTask())
@@ -161,7 +142,6 @@ type Async with
             createTask
             >> Async.Await
         )
-#endif
 
 /// <summary><p>Contains camelCase module-level functions for <see cref="T:Task`1"/> computations.</p>
 /// <p>NOTE these functions duplicate those available in FSharp.Core >= 11. <code>net10</code> and later TFM builds omit these shims.</p>
