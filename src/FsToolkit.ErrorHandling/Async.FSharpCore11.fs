@@ -6,7 +6,12 @@
 //   - The Shim version has an extra throw-rethrow stacktrace frame, but is consistent wrt the other key behaviors:
 //     1. Single-exception tasks are unwrapped and rethrown.
 //     2. Cancellation surfaces as TaskCanceledException [and per normal async semantics is not catchable]
+#if FABLE_COMPILER || !NET10_0_OR_GREATER
 [<AutoOpen>]
+#else
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+[<System.Obsolete "These shims are included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
 module FsToolkit.ErrorHandling.FSharpCore11AsyncShims
 
 #if FABLE_COMPILER || !NET10_0_OR_GREATER
@@ -59,14 +64,22 @@ type Async with
     /// Prints <c>Caught: test</c>. The <c>AggregateException</c> branch is not reached because a
     /// single-inner exception is unwrapped. Contrast with <c>Async.AwaitTask</c>.
     /// </example>
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
     [<System.Diagnostics.DebuggerStepThrough>]
     static member Await(task: Task<'T>) : Async<'T> =
+#if NET10_0_OR_GREATER
+        Async.Await task
+#else
         async {
             try
                 return! Async.AwaitTask task
             with :? System.AggregateException as e when e.InnerExceptions.Count = 1 ->
                 return raise e.InnerExceptions[0]
         }
+#endif
 
     /// <summary>Creates an asynchronous computation that will wait for the given task to complete.</summary>
     /// <param name="task">The task to await.</param>
@@ -103,45 +116,87 @@ type Async with
     /// Prints <c>Caught: test</c>. The <c>AggregateException</c> branch is not reached because a
     /// single-inner exception is unwrapped. Contrast with <c>Async.AwaitTask</c>.
     /// </example>
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
     [<System.Diagnostics.DebuggerStepThrough>]
     static member Await(task: Task) : Async<unit> =
+#if NET10_0_OR_GREATER
+        Async.Await task
+#else
         async {
             try
                 return! Async.AwaitTask task
             with :? System.AggregateException as e when e.InnerExceptions.Count = 1 ->
                 return raise e.InnerExceptions[0]
         }
+#endif
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
+    static member Await(task: ValueTask) : Async<unit> =
+#if NET10_0_OR_GREATER
+        Async.Await task
+#else
+        Async.Await(task.AsTask())
+#endif
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
+    static member Await(task: ValueTask<'t>) : Async<'t> =
+#if NET10_0_OR_GREATER
+        Async.Await task
+#else
+        Async.Await(task.AsTask())
+#endif
 
-    static member Await(task: ValueTask) : Async<unit> = Async.Await(task.AsTask())
-    static member Await(task: ValueTask<'t>) : Async<'t> = Async.Await(task.AsTask())
-
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
     static member StartTaskImmediate(createTask: CancellationToken -> Task<'T>) : Async<'T> =
-        async.Bind(
-            Async.CancellationToken,
-            createTask
-            >> Async.Await
-        )
+#if NET10_0_OR_GREATER
+        Async.StartTaskImmediate createTask
+#else
+        async.Bind(Async.CancellationToken, createTask >> Async.Await)
+#endif
 
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
     static member StartTaskImmediate(createTask: CancellationToken -> Task) : Async<unit> =
-        async.Bind(
-            Async.CancellationToken,
-            createTask
-            >> Async.Await
-        )
+#if NET10_0_OR_GREATER
+        Async.StartTaskImmediate createTask
+#else
+        async.Bind(Async.CancellationToken, createTask >> Async.Await)
+#endif
 
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
     static member StartTaskImmediate(createTask: CancellationToken -> ValueTask<'T>) : Async<'T> =
-        async.Bind(
-            Async.CancellationToken,
-            createTask
-            >> Async.Await
-        )
+#if NET10_0_OR_GREATER
+        Async.StartTaskImmediate createTask
+#else
+        async.Bind(Async.CancellationToken, createTask >> Async.Await)
+#endif
 
+#if NET10_0_OR_GREATER
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.Obsolete "Shim is included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
     static member StartTaskImmediate(createTask: CancellationToken -> ValueTask) : Async<unit> =
-        async.Bind(
-            Async.CancellationToken,
-            createTask
-            >> Async.Await
-        )
+#if NET10_0_OR_GREATER
+        Async.StartTaskImmediate createTask
+#else
+        async.Bind(Async.CancellationToken, createTask >> Async.Await)
+#endif
+
 #endif
 
 /// <summary><p>Contains camelCase module-level functions for <see cref="T:Task`1"/> computations.</p>
@@ -149,6 +204,10 @@ type Async with
 /// </summary>
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+#if NET10_0_OR_GREATER
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+[<System.Obsolete "Shims are included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
 module Async =
 
     /// <summary>Creates an asynchronous computation that returns the given value.</summary>
@@ -160,7 +219,12 @@ module Async =
     /// computation |> Async.RunSynchronouslyImmediate // evaluates to 42
     /// </code>
     /// </example>
-    let inline result (value: 'T) : Async<'T> = async.Return value
+    let inline result (value: 'T) : Async<'T> =
+#if NET10_0_OR_GREATER
+        Async.result value
+#else
+        async.Return value
+#endif
 
     /// <summary>Creates an asynchronous computation that applies the mapping function to the result of the given computation.</summary>
     /// <param name="mapping">The function to apply to the result.</param>
@@ -173,11 +237,11 @@ module Async =
     /// </code>
     /// </example>
     let inline map ([<InlineIfLambda>] mapping: 'T -> 'U) (computation: Async<'T>) : Async<'U> =
-        async.Bind(
-            computation,
-            mapping
-            >> async.Return
-        )
+#if NET10_0_OR_GREATER
+        Async.map mapping computation
+#else
+        async.Bind(computation, mapping >> async.Return)
+#endif
 
     /// <summary>Creates an asynchronous computation that passes the result of the given computation to the binder function.</summary>
     /// <param name="binder">A function that takes the result of the computation and returns a new asynchronous computation.</param>
@@ -193,7 +257,11 @@ module Async =
         ([<InlineIfLambda>] binder: 'T -> Async<'U>)
         (computation: Async<'T>)
         : Async<'U> =
+#if NET10_0_OR_GREATER
+        Async.bind binder computation
+#else
         async.Bind(computation, binder)
+#endif
 
     /// <summary>Creates an asynchronous computation that runs the given computation and ignores its result.</summary>
     /// <param name="computation">The input computation.</param>
@@ -214,7 +282,12 @@ module Async =
     /// </code>
     /// </example>
     [<RequiresExplicitTypeArguments>]
-    let inline ignore<'T> (computation: Async<'T>) : Async<unit> = Async.Ignore computation
+    let inline ignore<'T> (computation: Async<'T>) : Async<unit> =
+#if NET10_0_OR_GREATER
+        Async.ignore computation
+#else
+        Async.Ignore computation
+#endif
 
     /// <summary>Creates an asynchronous computation that yields the original result on success, or the result of
     /// <c>handler exn</c> for non-cancellation exceptions.</summary>
@@ -236,12 +309,16 @@ module Async =
     /// </code>
     /// </example>
     let catchWith (handler: exn -> 'T) (computation: Async<'T>) : Async<'T> =
+#if NET10_0_OR_GREATER
+        Async.catchWith handler computation
+#else
         async {
             try
                 return! computation
             with e ->
                 return handler e
         }
+#endif
 
     /// <summary>Creates an asynchronous computation that reifies the outcome of the given <c>computation</c> as a <c>Result</c>:
     /// <c>Ok</c> on success, <c>Error</c> on failure, so exceptions become values. Cancellation still propagates.</summary>
@@ -259,6 +336,9 @@ module Async =
     /// </code>
     /// </example>
     let catch (computation: Async<'T>) : Async<Result<'T, exn>> =
+#if NET10_0_OR_GREATER
+        Async.catch computation
+#else
         async {
             try
                 let! v = computation
@@ -266,6 +346,7 @@ module Async =
             with e ->
                 return Result.Error e
         }
+#endif
 
     /// <summary>An asynchronous computation that returns <c>unit</c>. This is equivalent to <c>async.Zero()</c>.</summary>
     /// <example>
@@ -273,7 +354,12 @@ module Async =
     /// Async.empty |> Async.RunSynchronouslyImmediate // evaluates to ()
     /// </code>
     /// </example>
-    let empty: Async<unit> = async.Zero()
+    let empty: Async<unit> =
+#if NET10_0_OR_GREATER
+        Async.empty
+#else
+        async.Zero()
+#endif
 
     /// <summary>Creates an asynchronous computation that executes each of the <c>computations</c> in sequence, returning <c>unit</c>.</summary>
     /// <param name="computations">A sequence of unit computations to be executed in sequence.</param>
@@ -287,8 +373,12 @@ module Async =
     /// </code>
     /// </example>
     let sequentialDo (computations: seq<Async<unit>>) : Async<unit> =
+#if NET10_0_OR_GREATER
+        Async.sequentialDo computations
+#else
         Async.Sequential computations
         |> ignore<unit[]>
+#endif
 
     /// <summary>Creates an asynchronous computation that executes all the supplied asynchronous computations
     /// with concurrency limited to at most <c>maxDegreeOfParallelism</c>,
@@ -307,7 +397,11 @@ module Async =
     /// </code>
     /// </example>
     let parallelLimit (maxDegreeOfParallelism: int) (computations: seq<Async<'T>>) : Async<'T[]> =
+#if NET10_0_OR_GREATER
+        Async.parallelLimit maxDegreeOfParallelism computations
+#else
         Async.Parallel(computations, maxDegreeOfParallelism = maxDegreeOfParallelism)
+#endif
 
     /// <summary>Creates an asynchronous computation that executes all the supplied asynchronous computations returning unit,
     /// with concurrency limited to at most <c>maxDegreeOfParallelism</c>.</summary>
@@ -326,7 +420,11 @@ module Async =
         (maxDegreeOfParallelism: int)
         (computations: seq<Async<unit>>)
         : Async<unit> =
+#if NET10_0_OR_GREATER
+        Async.parallelDoLimit maxDegreeOfParallelism computations
+#else
         parallelLimit maxDegreeOfParallelism computations
         |> ignore<unit[]>
+#endif
 
 #endif

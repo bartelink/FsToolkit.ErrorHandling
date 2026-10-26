@@ -1,6 +1,11 @@
 // NOTE Direct copy of FSharp.Core V11 with the following alterations:
 // - namespace is FsToolkit.ErrorHandling instead of Microsoft.FSharp.Control
+#if !NET10_0_OR_GREATER
 [<AutoOpen>]
+#else
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+[<System.Obsolete "These shims are included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
 module FsToolkit.ErrorHandling.FSharpCore11TaskShims
 
 open FSharp.Core.CompilerServices
@@ -12,6 +17,10 @@ open System.Threading.Tasks
 /// </summary>
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+#if NET10_0_OR_GREATER
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+[<System.Obsolete "Shims are included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
 module Task =
 
     /// <summary>Creates a task that returns the given value.</summary>
@@ -23,7 +32,12 @@ module Task =
     /// t.Result // evaluates to 42
     /// </code>
     /// </example>
-    let inline result (value: 'T) : Task<'T> = Task.FromResult value
+    let inline result (value: 'T) : Task<'T> =
+#if NET10_0_OR_GREATER
+        Task.result value
+#else
+        Task.FromResult value
+#endif
 
     /// <summary>A completed task that returns <c>unit</c>. This is a <c>Task&lt;unit&gt;</c> (not the non-generic <c>Task.CompletedTask</c>).</summary>
     /// <example>
@@ -31,7 +45,12 @@ module Task =
     /// Task.empty.Result // evaluates to ()
     /// </code>
     /// </example>
-    let empty: Task<unit> = result ()
+    let empty: Task<unit> =
+#if NET10_0_OR_GREATER
+        Task.empty
+#else
+        result ()
+#endif
 
     /// <summary>Creates a task that passes the result of the given task to the binder function.</summary>
     /// <param name="binder">A function that takes the result of the task and returns a new task.</param>
@@ -44,6 +63,9 @@ module Task =
     /// </code>
     /// </example>
     let inline bind ([<InlineIfLambda>] binder: 'T -> Task<'U>) (task: Task<'T>) : Task<'U> =
+#if NET10_0_OR_GREATER
+        Task.bind binder task
+#else
         if task.Status = TaskStatus.RanToCompletion then
             try
                 binder task.Result
@@ -54,6 +76,7 @@ module Task =
                 let! v = task
                 return! binder v
             }
+#endif
 
     /// <summary>Creates a task that applies the mapping function to the result of the given task.</summary>
     /// <param name="mapping">The function to apply to the result.</param>
@@ -66,6 +89,9 @@ module Task =
     /// </code>
     /// </example>
     let inline map ([<InlineIfLambda>] mapping: 'T -> 'U) (task: Task<'T>) : Task<'U> =
+#if NET10_0_OR_GREATER
+        Task.map mapping task
+#else
         if task.Status = TaskStatus.RanToCompletion then
             try
                 mapping task.Result
@@ -77,6 +103,7 @@ module Task =
                 let! v = task
                 return mapping v
             }
+#endif
 
     /// <summary>Creates a task that runs the given task and ignores its result.</summary>
     /// <param name="task">The input task.</param>
@@ -89,10 +116,14 @@ module Task =
     /// </example>
     [<RequiresExplicitTypeArguments>]
     let inline ignore<'T> (task: Task<'T>) : Task<unit> =
+#if NET10_0_OR_GREATER
+        Task.ignore task
+#else
         if task.Status = TaskStatus.RanToCompletion then
             empty
         else
             map ignore task
+#endif
 
     /// <summary>Creates a <c>Task</c> that yields the original result on success, or the result of
     /// <c>handler exn</c> for non-cancellation exceptions.</summary>
@@ -113,6 +144,9 @@ module Task =
     /// </code>
     /// </example>
     let inline catchWith ([<InlineIfLambda>] handler: exn -> 'T) (task: Task<'T>) : Task<'T> =
+#if NET10_0_OR_GREATER
+        Task.catchWith handler task
+#else
         if task.Status = TaskStatus.RanToCompletion then
             task
         else
@@ -123,6 +157,7 @@ module Task =
                 | :? System.OperationCanceledException as e -> return! raise e
                 | e -> return handler e
             }
+#endif
 
     /// <summary>Creates a <c>Task</c> that reifies the outcome of the given <c>Task</c> as a <c>Result</c>:
     /// <c>Ok</c> on success, <c>Error</c> on failure, so faults become values. Cancellation still propagates.</summary>
@@ -140,9 +175,13 @@ module Task =
     /// </code>
     /// </example>
     let catch (task: Task<'T>) : Task<Result<'T, exn>> =
+#if NET10_0_OR_GREATER
+        Task.catch task
+#else
         task
         |> map Ok
         |> catchWith Error
+#endif
 
     /// <summary>Creates a task that executes each of the <c>computations</c> in sequence,
     /// returning an array of their results in order of the input sequence.</summary>
@@ -162,6 +201,9 @@ module Task =
         (ct: CancellationToken)
         (computations: seq<CancellationToken -> Task<'T>>)
         : Task<'T[]> =
+#if NET10_0_OR_GREATER
+        Task.sequential ct computations
+#else
         if ct.IsCancellationRequested then
             Task.FromCanceled<'T[]> ct
         else
@@ -175,6 +217,7 @@ module Task =
 
                 return results.Close()
             }
+#endif
 
     /// <summary>Creates a task that executes each of the <c>computations</c> in sequence, returning <c>unit</c>.</summary>
     /// <param name="ct">A cancellation token to pass to each task factory.</param>
@@ -194,6 +237,9 @@ module Task =
         (ct: CancellationToken)
         (computations: seq<CancellationToken -> Task<unit>>)
         : Task<unit> =
+#if NET10_0_OR_GREATER
+        Task.sequentialDo ct computations
+#else
         if ct.IsCancellationRequested then
             Task.FromCanceled<unit> ct
         else
@@ -202,6 +248,7 @@ module Task =
                     ct.ThrowIfCancellationRequested()
                     do! f ct
             }
+#endif
 
     /// <summary>Creates a task that executes each of the <c>computations</c> in parallel with concurrency limited
     /// to at most <c>maxDegreeOfParallelism</c>, returning an array of their results in order of the input sequence.</summary>
@@ -230,6 +277,9 @@ module Task =
         (ct: CancellationToken)
         (computations: seq<CancellationToken -> Task<'T>>)
         : Task<'T[]> =
+#if NET10_0_OR_GREATER
+        Task.parallelLimit maxDegreeOfParallelism ct computations
+#else
         if ct.IsCancellationRequested then
             Task.FromCanceled<'T[]> ct
         elif maxDegreeOfParallelism < 1 then
@@ -262,7 +312,7 @@ module Task =
                                 let mutable completed = false
 
                                 try
-                                    let! r = req.[index]innerCts.Token
+                                    let! r = req[index] innerCts.Token
                                     completed <- true
                                     res[index] <- r
                                 finally
@@ -283,6 +333,7 @@ module Task =
                     innerCts.Token.ThrowIfCancellationRequested()
                     return res
                 }
+#endif
 
     /// <summary>Creates a task that executes the <c>computations</c> in parallel,
     /// with concurrency limited to at most <c>maxDegreeOfParallelism</c>.</summary>
@@ -311,8 +362,12 @@ module Task =
         (ct: CancellationToken)
         (computations: seq<CancellationToken -> Task<unit>>)
         : Task<unit> =
+#if NET10_0_OR_GREATER
+        Task.parallelDoLimit maxDegreeOfParallelism ct computations
+#else
         parallelLimit maxDegreeOfParallelism ct computations
         |> ignore<unit[]>
+#endif
 
     /// <summary>Starts the <c>computation</c> on the current thread, returning a <see cref="T:System.Threading.Tasks.Task`1"/>
     /// that represents its result.</summary>
@@ -334,7 +389,11 @@ module Task =
     /// </code>
     /// </example>
     let startAsyncImmediate (ct: CancellationToken) (computation: Async<'T>) : Task<'T> =
+#if NET10_0_OR_GREATER
+        Task.startAsyncImmediate ct computation
+#else
         Async.StartImmediateAsTask(computation, cancellationToken = ct)
+#endif
 
 #if NETSTANDARD2_1 || NET
     /// <summary>Converts a <see cref="T:System.Threading.Tasks.ValueTask`1"/> to a <see cref="T:System.Threading.Tasks.Task`1"/>.</summary>
@@ -347,7 +406,12 @@ module Task =
     /// t.Result // evaluates to 42
     /// </code>
     /// </example>
-    let inline ofValueTask (valueTask: ValueTask<'T>) : Task<'T> = valueTask.AsTask()
+    let inline ofValueTask (valueTask: ValueTask<'T>) : Task<'T> =
+#if NET10_0_OR_GREATER
+        Task.ofValueTask valueTask
+#else
+        valueTask.AsTask()
+#endif
 #endif
 
 /// <summary><p>Contains camelCase module-level functions for <see cref="T:System.Threading.Tasks.ValueTask`1"/> computations.</p>
@@ -355,13 +419,27 @@ module Task =
 /// </summary>
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+#if NET10_0_OR_GREATER
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+[<System.Obsolete "Shims are included solely to support inline methods compiled against FsToolkit.ErrorHandling builds for TFMs before net10.">]
+#endif
 module ValueTask =
 
     [<CompiledName("Result")>]
-    let inline result (value: 'T) : ValueTask<'T> = ValueTask<'T>(value)
+    let inline result (value: 'T) : ValueTask<'T> =
+#if NET10_0_OR_GREATER
+        ValueTask.result value
+#else
+        ValueTask<'T>(value)
+#endif
 
     [<CompiledName("Empty")>]
-    let empty: ValueTask<unit> = result ()
+    let empty: ValueTask<unit> =
+#if NET10_0_OR_GREATER
+        ValueTask.empty
+#else
+        result ()
+#endif
 
     [<CompiledName("OfTask")>]
     let inline ofTask (task: Task<'T>) : ValueTask<'T> = ValueTask<'T>(task)
@@ -371,6 +449,9 @@ module ValueTask =
         ([<InlineIfLambda>] binder: 'T -> ValueTask<'U>)
         (task: ValueTask<'T>)
         : ValueTask<'U> =
+#if NET10_0_OR_GREATER
+        ValueTask.bind binder task
+#else
         if task.IsCompletedSuccessfully then
             try
                 binder task.Result
@@ -385,9 +466,13 @@ module ValueTask =
                 }
 
             ValueTask<'U>(t)
+#endif
 
     [<CompiledName("Map")>]
     let inline map ([<InlineIfLambda>] mapping: 'T -> 'U) (task: ValueTask<'T>) : ValueTask<'U> =
+#if NET10_0_OR_GREATER
+        ValueTask.map mapping task
+#else
         if task.IsCompletedSuccessfully then
             try
                 mapping task.Result
@@ -403,16 +488,25 @@ module ValueTask =
                 }
 
             ValueTask<'U>(t)
+#endif
 
     [<CompiledName("Ignore")>]
     [<RequiresExplicitTypeArguments>]
-    let inline ignore<'T> (task: ValueTask<'T>) : ValueTask<unit> = map ignore task
+    let inline ignore<'T> (task: ValueTask<'T>) : ValueTask<unit> =
+#if NET10_0_OR_GREATER
+        ValueTask.ignore task
+#else
+        map ignore task
+#endif
 
     [<CompiledName("CatchWith")>]
     let inline catchWith
         ([<InlineIfLambda>] handler: exn -> 'T)
         (task: ValueTask<'T>)
         : ValueTask<'T> =
+#if NET10_0_OR_GREATER
+        ValueTask.catchWith handler task
+#else
         if task.IsCompletedSuccessfully then
             task
         else
@@ -426,9 +520,14 @@ module ValueTask =
                 }
 
             ValueTask<'T>(t)
+#endif
 
     [<CompiledName("Catch")>]
     let catch (task: ValueTask<'T>) : ValueTask<Result<'T, exn>> =
+#if NET10_0_OR_GREATER
+        ValueTask.catch task
+#else
         task
         |> map Ok
         |> catchWith Error
+#endif
