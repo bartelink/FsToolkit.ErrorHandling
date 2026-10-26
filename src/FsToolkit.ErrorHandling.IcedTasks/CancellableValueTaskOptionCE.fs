@@ -1467,12 +1467,12 @@ module CancellableValueTaskOption =
     /// <summary>Lifts an item to a CancellableValueTaskOption.</summary>
     /// <param name="x">The item to be the result of the CancellableValueTaskOption.</param>
     /// <returns>A CancellableValueTaskOption with the item as the result.</returns>
-    let inline some x : CancellableValueTaskOption<'a> = fun _ -> ValueTask<'a option>(Some x)
+    let inline some x : CancellableValueTaskOption<'a> = CancellableValueTask.result (Some x)
 
     /// <summary>A CancellableValueTaskOption that yields None.</summary>
     /// <returns>A CancellableValueTaskOption with None as the result.</returns>
     let inline none<'a> : CancellableValueTaskOption<'a> =
-        fun _ -> ValueTask<'a option>(None)
+        CancellableValueTask.result None
 
     /// <summary>Allows chaining of CancellableValueTaskOptions.</summary>
     /// <param name="binder">The continuation.</param>

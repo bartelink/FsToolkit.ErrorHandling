@@ -117,7 +117,7 @@ module Task =
     [<RequiresExplicitTypeArguments>]
     let inline ignore<'T> (task: Task<'T>) : Task<unit> =
 #if NET10_0_OR_GREATER
-        Task.ignore task
+        Task.ignore<'T> task
 #else
         if task.Status = TaskStatus.RanToCompletion then
             empty
@@ -494,7 +494,7 @@ module ValueTask =
     [<RequiresExplicitTypeArguments>]
     let inline ignore<'T> (task: ValueTask<'T>) : ValueTask<unit> =
 #if NET10_0_OR_GREATER
-        ValueTask.ignore task
+        ValueTask.ignore<'T> task
 #else
         map ignore task
 #endif

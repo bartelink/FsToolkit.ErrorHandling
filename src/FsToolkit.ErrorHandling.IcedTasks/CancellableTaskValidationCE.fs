@@ -305,13 +305,21 @@ module CancellableTaskValidation =
     /// <param name="item">The item to be the result of the CancellableTask.</param>
     /// <returns>A CancellableTask with the item as the result.</returns>
     let inline ok (item: 'item) : CancellableTaskValidation<'item, 'Error> =
-        fun _ -> TaskResult.ok item
+        CancellableTask.result (Validation.ok item)
 
-    /// <summary>Lifts an item to a CancellableTask.</summary>
-    /// <param name="item">The item to be the result of the CancellableTask.</param>
-    /// <returns>A CancellableTask with the item as the result.</returns>
+    /// <summary>Lifts an error list to a CancellableTaskValidation.</summary>
+    /// <param name="errors">The error list to be the error result of the CancellableTaskValidation.</param>
+    /// <returns>A CancellableTask  with the errors as the result.</returns>
+    let inline errors (errors: 'error list) : CancellableTaskValidation<'ok, 'error> =
+        CancellableTask.result (Validation.errors errors)
+
+    /// <summary>Lifts an error to a CancellableTaskValidation.</summary>
+    /// <param name="error">The single error to be the error result of the CancellableTaskValidation.</param>
+    /// <returns>A CancellableTask with the error as the result.</returns>
+    let inline error (error: 'error) : CancellableTaskValidation<'ok, 'error> = errors [ error ]
+
     [<System.Obsolete "Use CancellableTaskValidation.ok instead of CancellableValueValidation.singleton">]
-    let inline singleton (item: 'item) : CancellableTaskValidation<'item, 'Error> = ok item
+    let inline singleton (item: 'item) : CancellableTaskValidation<'item, 'error> = ok item
 
     /// <summary>Allows chaining of CancellableTasks.</summary>
     /// <param name="binder">The continuation.</param>
@@ -326,23 +334,14 @@ module CancellableTaskValidation =
             return! binder cResult
         }
 
-
     let inline ofResult (result: Result<'ok, 'error>) : CancellableTaskValidation<'ok, 'error> =
         let x = Result.mapError List.singleton result
-        fun _ -> Task.result x
-
-    /// <summary>Lifts an item to a CancellableTaskValidation.</summary>
-    /// <param name="error">The item to be the error result of the CancellableTaskValidation.</param>
-    /// <returns>A CancellableTaskValidation with the item as the result.</returns>
-    let inline error (error: 'error) : CancellableTaskValidation<'ok, 'error> =
-        fun _ -> Task.FromResult(Error [ error ])
-
+        CancellableTask.result x
 
     let inline ofChoice (choice: Choice<'ok, 'error>) : CancellableTaskValidation<'ok, 'error> =
         match choice with
         | Choice1Of2 x -> ok x
         | Choice2Of2 x -> error x
-
 
     let inline mapError
         ([<InlineIfLambda>] errorMapper: 'errorInput -> 'errorOutput)

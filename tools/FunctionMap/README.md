@@ -82,7 +82,6 @@
 |ofObj|FSharp.Core|FSharp.Core||||||||
 |ofOption||FsToolkit||||||||
 |ofResult|FsToolkit|FsToolkit||||FsToolkit|FsToolkit|FsToolkit|FsToolkit|
-|ofTask|||||||FsToolkit|FsToolkit||
 |ofTaskAction|||||||FsToolkit|||
 |ofValueOption|FsToolkit|||||||||
 |ok||||||FsToolkit|FsToolkit|FsToolkit|FsToolkit|

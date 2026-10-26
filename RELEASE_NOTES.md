@@ -58,9 +58,11 @@
       - -> `Task.catch`.
       - NOTE BEHAVIOR CHANGE: unlike `ofCatchTask`, `catch` does NOT trap `OperationCanceledException`/`TaskCancelledException` (which does not align with the incoming `Async.catch`/`catchWith` and `Task.catch`/`catchWith`).
 - [Stragglers from beta003](https://github.com/demystifyfp/FsToolkit.ErrorHandling/pull/373) Credits @bartelink
-  - feat(CancellableValueTask): `result`
-  - feat(CancellableValueTaskResult): `ok`
+  - feat(CancellableTask, CancellableValueTask): `result`
+  - feat(CancellableTaskResult, CancellableTaskValidation, CancellableValueTaskResult): `ok`
+  - feat(CancellableTaskResult): `error`
   - feat(JobOption): `none`
+  - feat(CancellableTaskValidation, Validation): `errors`
   - Renames:
     - OBSOLETE(JobOption): `singleton`
       - -> `some`.

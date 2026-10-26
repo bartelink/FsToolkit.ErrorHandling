@@ -10,7 +10,7 @@ module Task =
     [<System.Obsolete("Use the built in FSharp.Core Task.result instead")>]
     let inline singleton value =
         value
-        |> Task.FromResult
+        |> Task.result
 #endif
 
     let inline bindV ([<InlineIfLambda>] f: 'a -> Task<'b>) (x: ValueTask<'a>) =

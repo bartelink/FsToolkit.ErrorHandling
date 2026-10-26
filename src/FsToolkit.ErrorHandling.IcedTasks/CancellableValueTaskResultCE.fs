@@ -301,13 +301,14 @@ module CancellableValueTaskResult =
     /// <summary>Lifts an item to a CancellableValueTaskResult.</summary>
     /// <param name="item">The item to be the result of the CancellableValueTaskResult.</param>
     /// <returns>A CancellableValueTaskResult with the item as the result.</returns>
-    let inline ok (item: 'item) : CancellableValueTaskResult<'item, 'Error> =
+    let inline ok (item: 'item) : CancellableValueTaskResult<'item, 'error> =
         CancellableValueTask.result (Ok item)
+
+    let inline error x : CancellableValueTaskResult<'item, 'error> =
+        CancellableValueTask.result (Error x)
 
     [<System.Obsolete "Use CancellableValueTaskResult.ok instead of CancellableValueTaskResult.singleton">]
     let inline singleton (item: 'item) : CancellableValueTaskResult<'item, 'Error> = ok item
-
-    let inline error x = CancellableValueTask.result (Error x)
 
     /// <summary>Gets the default cancellation token for executing computations.</summary>
     ///
