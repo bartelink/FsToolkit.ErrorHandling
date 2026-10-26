@@ -5,20 +5,19 @@ namespace TestHelpers
 module Tests =
     let failtestf = failwithf
 #endif
+
 module Expect =
+#if FABLE_COMPILER
 #if FABLE_COMPILER_PYTHON || FABLE_COMPILER_JAVASCRIPT
     open Fable.Pyxpecto
 #endif
-#if !FABLE_COMPILER
-    open Expecto
-    open System.Threading.Tasks
-#endif
-
-#if FABLE_COMPILER
     let isOk x message =
         match x with
         | Ok _ -> ()
         | Result.Error x -> failtestf "%s. Expected Ok, was Error(%A)." message x
+#else
+    open Expecto
+    open System.Threading.Tasks
 #endif
 
     let hasErrorValue v x =
@@ -117,7 +116,9 @@ module Expect =
         }
 
 #if !FABLE_COMPILER
+#if !NET10_0_OR_GREATER
     open FsToolkit.ErrorHandling // Async.Await shims
+#endif
 
     let runTask (taskX: Task<_>) =
         Async.Await taskX

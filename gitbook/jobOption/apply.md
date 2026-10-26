@@ -13,7 +13,7 @@ Job<('a -> 'b) option> -> Job<'a option> -> Job<'b option>
 ### Example 1
 
 ```fsharp
-let f = JobOption.some (fun x -> x + 1))
+let f = JobOption.some (fun x -> x + 1)
 let x = JobOption.some 41
 
 JobOption.apply f x

@@ -1,7 +1,7 @@
 ### 6.0.0-beta004 - tba
 
 - [`Async.Await`, `Async.StartTaskImmediate`, `Task.startAsyncImmediate`, `Async`+`Task`+`ValueTask` shims and related obsoletions](https://github.com/demystifyfp/FsToolkit.ErrorHandling/pull/373) Credits @bartelink
-  - feat(AsyncResult, TaskResult): `result`. Replaces `singleton`; aligns with FSharp.Core Task/Async >= 11 naming.
+  - feat(Async, Task, ValueTask): `result`. Replaces `singleton`; aligned with FSharp.Core >= 11 naming.  
   - BREAKING(Task)!: `catch` returns `Task<Result<_,_>>` (was `Task<Choice<_,_>>`) to match FSharp.Core >= 11.
   - BREAKING(Async, Task, Option)!: Add `RequiresExplicitTypeArguments` to `ignore` align with FSharp.Core Task/Async naming.
   - (net9 and lower TFMs) feat(Async, Task, ValueTask): Shims of `Async.Await`, `Async.StartTaskImmediate`, `Task.startAsyncImmediate` and related functions to align with FSharp.Core >= 11.0.0.
@@ -16,8 +16,10 @@
     - Internal usage of `AwaitTask` switches to `Await`
     - NOTE BEHAVIOR CHANGE: exceptions surfaced in calling code are no longer egregiously wrapped in `AggregateException`, i.e. you can now `try ... with` targeting the actual exception type to handle exceptions from the awaited Task. [#154](https://github.com/demystifyfp/FsToolkit.ErrorHandling/issues/154).
   - Renames:
-    - OBSOLETE(Async, CancellableTaskResult, CancellableTaskValidation, CancellableValueTaskResult, Job): `singleton`
-      - -> `result`.
+    - OBSOLETE(Async, Task, Job): `singleton`
+        - -> `result`.
+    - OBSOLETE(CancellableTaskResult, CancellableTaskValidation, CancellableValueTaskResult): `singleton`
+        - -> `ok`.
     - OBSOLETE(AsyncResult, JobResult, TaskResult): `catch`
       - -> `catchWith`.
   - Removals:

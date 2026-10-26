@@ -9,15 +9,15 @@ open System.Threading.Tasks
 open FsToolkit.ErrorHandling // Async.Await shims
 #endif
 let testCaseTask name test =
-    Async.Await(test (): Task)
+    async { return! Async.Await(test (): Task) }
     |> testCaseAsync name
 
 let ptestCaseTask name test =
-    Async.Await(test (): Task)
+    async { return! Async.Await(test (): Task) }
     |> ptestCaseAsync name
 
 let ftestCaseTask name test =
-    Async.Await(test (): Task)
+    async { return! Async.Await(test (): Task) }
     |> ftestCaseAsync name
 
 module Expect =

@@ -46,7 +46,7 @@ Result<Task<'a>, 'b> -> Task<Result<'a, 'b>>
 
 ```fsharp
 let result : Task<Result<int, string>> =
-    TaskResult.ok 1
+    Ok (Task.result 1)
     |> Result.sequenceTask
     
 // Task { Ok 1 }

@@ -158,7 +158,7 @@
 
   * Task
     * [apply](task/apply.md)
-    * [bind](from FSharp.Core)
+    * [bind](task/bind.md) (from FSharp.Core)
     * [bindV](task/bindV.md)
     * [Computation Expression](task/ce.md)
     * [ignore](task/ignore.md) (from FSharp.Core)
@@ -387,7 +387,6 @@
       * [traverseJobResultA](list/traverseJobResultA.md)
       * [sequenceJobResultA](list/sequenceJobResultA.md)
     * Transforms
-      * [ofJob](jobResult/ofJob.md)
       * [ofResult](jobResult/ofResult.md)
       * [fromAsync](jobResult/fromAsync.md)
       * [fromTask](jobResult/fromTask.md)

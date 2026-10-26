@@ -206,10 +206,8 @@ module JobResult =
     [<System.Obsolete "Please use JobResult.catchWith instead of JobResult.catch">]
     let inline catch f x = catchWith f x
 
-    /// Lift Job to JobResult
-    let inline ofJob x =
-        x
-        |> Job.map Ok
+    [<System.Obsolete "Please use Job.map Ok instead of JobResult.ofJob (Consider Job.catch if you want to trap exceptions as Error)">]
+    let inline ofJob x = Job.map Ok x
 
     [<System.Obsolete "Please use Job.result instead of JobResult.ofResult">]
     let inline ofResult (x: Result<_, _>) =

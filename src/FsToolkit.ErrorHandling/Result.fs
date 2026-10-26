@@ -357,12 +357,7 @@ let inline defaultWith
 /// </summary>
 /// <param name="result">The input result.</param>
 /// <returns>Unit if <c>Ok</c>, otherwise the provided value.</returns>
-let inline ignoreError<'error> (result: Result<unit, 'error>) : unit =
-#if NET10_0_OR_GREATER
-    Result.defaultValue () result
-#else
-    defaultValue () result
-#endif
+let inline ignoreError<'error> (result: Result<unit, 'error>) : unit = Operators.ignore result
 
 /// <summary>
 /// If the result is <c>Ok</c> and the predicate returns true, executes the function on the <c>Ok</c> value. Passes through the input value.

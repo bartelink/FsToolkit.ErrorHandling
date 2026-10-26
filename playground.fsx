@@ -71,16 +71,14 @@ module Async =
     let inline flatten x = bind id x
 
 module Result =
-    open FsToolkit.ErrorHandling
-
-    let inline either ([<InlineIfLambda>] okF) ([<InlineIfLambda>] errorF) =
+    let inline eitherBind ([<InlineIfLambda>] okF) ([<InlineIfLambda>] errorF) =
         function
         | Ok x -> okF x
         | Error e -> errorF e
 
     let inline bind ([<InlineIfLambda>] f) x = Operators.bindM result x f
     let inline delay x = Operators.delayM result x
-    let inline singleton x = Operators.returnM result x
+    let inline ok x = Operators.returnM result x
     let inline returnFrom x = Operators.returnFromM result x
     let inline bindReturn ([<InlineIfLambda>] f) x = Operators.bindReturnM result x f
     let inline map ([<InlineIfLambda>] f) x = bindReturn f x
@@ -93,7 +91,7 @@ module Result =
 
     let inline sequence builder f x =
         x
-        |> either
+        |> eitherBind
             (fun x -> Operators.bindReturnM builder x f)
             (fun x ->
                 x
@@ -103,7 +101,7 @@ module Result =
 
     let inline sequenceLift builder f x =
         x
-        |> either
+        |> eitherBind
             (fun x -> Operators.liftM builder x f)
             (fun x ->
                 x
@@ -223,7 +221,7 @@ module DisposableOptionThings =
 
         static member inline op_Implicit(x: 'a Option) = DisposableOption.OfOption x
 
-        static member inline op_Imp licit (x: 'a ValueOption) = DisposableOption.OfValueOption x
+        static member inline op_Implicit(x: 'a ValueOption) = DisposableOption.OfValueOption x
 
 
     [<RequireQualifiedAccess>]
@@ -299,7 +297,7 @@ module Examples =
     open System.Diagnostics
 
     let inline implicitConv (x: ^T) : ^U =
-        ((^T or ^U): (static member op_Implicit: ^T -> ^U) (x))
+        ((^T or ^U): (static member op_Implicit: ^T -> ^U) x)
 
     let inline (!>) x = implicitConv x
     let inline (|!>) x f = f (!>x)

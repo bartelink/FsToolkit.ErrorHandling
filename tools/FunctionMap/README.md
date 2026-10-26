@@ -75,9 +75,7 @@
 |map3|FSharp.Core|FSharp.Core|FsToolkit|FsToolkit|FsToolkit|FsToolkit|FsToolkit|FsToolkit|FsToolkit|
 |mapError|||||FsToolkit|FsToolkit|FsToolkit|FsToolkit|FsToolkit|
 |mapErrors||||||FsToolkit||||
-|ofAsync|||||||FsToolkit|FsToolkit|FsToolkit|
 |ofChoice|||||FsToolkit|FsToolkit||||
-|ofJob|||||||||FsToolkit|
 |ofJobOn|||Hopac|||||||
 |ofNull|FsToolkit|FsToolkit||||||||
 |ofNullable|FSharp.Core|FSharp.Core||||||||

@@ -336,7 +336,7 @@ module Task =
     let startAsyncImmediate (ct: CancellationToken) (computation: Async<'T>) : Task<'T> =
         Async.StartImmediateAsTask(computation, cancellationToken = ct)
 
-#if NETSTANDARD2_1
+#if NETSTANDARD2_1 || NET
     /// <summary>Converts a <see cref="T:System.Threading.Tasks.ValueTask`1"/> to a <see cref="T:System.Threading.Tasks.Task`1"/>.</summary>
     /// <param name="valueTask">The input value task.</param>
     /// <returns>A task equivalent to the given value task.</returns>

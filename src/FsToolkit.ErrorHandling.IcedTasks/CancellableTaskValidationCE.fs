@@ -310,7 +310,7 @@ module CancellableTaskValidation =
     /// <summary>Lifts an item to a CancellableTask.</summary>
     /// <param name="item">The item to be the result of the CancellableTask.</param>
     /// <returns>A CancellableTask with the item as the result.</returns>
-    [<System.Obsolete "Use CancellableTaskValidation.ok instead (aligns with TaskResult naming)">]
+    [<System.Obsolete "Use CancellableTaskValidation.ok instead of CancellableValueValidation.singleton">]
     let inline singleton (item: 'item) : CancellableTaskValidation<'item, 'Error> = ok item
 
     /// <summary>Allows chaining of CancellableTasks.</summary>

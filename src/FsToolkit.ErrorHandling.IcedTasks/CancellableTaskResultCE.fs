@@ -307,6 +307,9 @@ module CancellableTaskResult =
     /// <returns>A CancellableTask with the item as the result.</returns>
     let inline ok (item: 'item) : CancellableTaskResult<'item, 'Error> = fun _ -> TaskResult.ok item
 
+    [<System.Obsolete "Use CancellableTaskResult.ok instead of CancellableTaskResult.singleton">]
+    let inline singleton (item: 'item) : CancellableTaskResult<'item, 'Error> = ok item
+
     let inline eitherBind
         ([<InlineIfLambda>] onOk: 'input -> 'output)
         ([<InlineIfLambda>] onError: 'inputError -> 'output)

@@ -304,7 +304,7 @@ module CancellableValueTaskResult =
     let inline ok (item: 'item) : CancellableValueTaskResult<'item, 'Error> =
         CancellableValueTask.result (Ok item)
 
-    [<System.Obsolete "Use CancellableValueTaskResult.ok instead (aligns with TaskResult naming)">]
+    [<System.Obsolete "Use CancellableValueTaskResult.ok instead of CancellableValueTaskResult.singleton">]
     let inline singleton (item: 'item) : CancellableValueTaskResult<'item, 'Error> = ok item
 
     let inline error x = CancellableValueTask.result (Error x)

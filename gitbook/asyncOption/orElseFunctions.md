@@ -85,7 +85,7 @@ let asyncOption : Async<int option> =
 ```fsharp
 let asyncOption : Async<int option> =
     AsyncOption.some 1
-    |> AsyncOption.orElseWith (fun () -> AsycOption.none)
+    |> AsyncOption.orElseWith (fun () -> AsyncOption.none)
 
 // async { Some 1 }
 ```

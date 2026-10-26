@@ -1,5 +1,8 @@
-// NOTE Direct copy of FSharp.Core V11 with the following alterations:
-// - namespace is FsToolkit.ErrorHandling instead of Microsoft.FSharp.Control
+// NOTE Derived from FSharp.Core V11 source with the following alterations:
+// (Task.FSharpCore11.fs is a more direct paste as there is no overlap with pre-existing functionality)
+// - namespace is FsToolkit.ErrorHandling instead of Microsoft.FSharp.Control.
+// - The TaskLike Await and StartTaskImmediate overloads are omitted.
+// - Await is custom-written as the production implementation relies on internal FSharp.Core APIs.
 [<AutoOpen>]
 module FsToolkit.ErrorHandling.FSharpCore11AsyncShims
 

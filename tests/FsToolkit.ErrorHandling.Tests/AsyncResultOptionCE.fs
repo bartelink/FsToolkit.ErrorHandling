@@ -84,7 +84,7 @@ let ``AsyncResultOptionCE return! Tests`` =
         }
 #if !FABLE_COMPILER
 
-        testCaseAsync "Return Ok TaskResultOption"
+        testCaseAsync "Return Some TaskResultOption"
         <| async {
             let innerData = "Foo"
             let data = TaskResultOption.some innerData
@@ -101,10 +101,10 @@ let ``AsyncResultOptionCE return! Tests`` =
 
             Expect.equal actual (OkSome innerData) "Should be ok"
         }
-        testCaseAsync "Return Ok TaskOption"
+        testCaseAsync "Return Some TaskOption"
         <| async {
             let innerData = "Foo"
-            let data = TaskResultOption.some innerData
+            let data = TaskOption.some innerData
             let! actual = asyncResultOption { return! data }
 
             Expect.equal actual (OkSome innerData) "Should be ok"
@@ -112,7 +112,7 @@ let ``AsyncResultOptionCE return! Tests`` =
         testCaseAsync "Return Task<'T>"
         <| async {
             let innerData = "Foo"
-            let! actual = asyncResultOption { return! Task.FromResult innerData }
+            let! actual = asyncResultOption { return! Task.result innerData }
 
             Expect.equal actual (OkSome innerData) "Should be ok"
         }
@@ -125,8 +125,6 @@ let ``AsyncResultOptionCE return! Tests`` =
             Expect.equal actual (OkSome innerData) "Should be ok"
         }
 #endif
-
-
     ]
 
 
