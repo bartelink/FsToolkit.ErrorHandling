@@ -19,7 +19,7 @@
     <Compile Include="ResultOption.fs" />
     <Compile Include="ResultOptionCE.fs" />
     <Compile Include="ResultOptionOp.fs" />
-    <Compile Include="Async.FSharpCore11.fs" Condition=" !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)','net10.0')) " />
+    <Compile Include="Async.FSharpCore11.fs" />
     <Compile Include="Async.fs" />
     <Compile Include="AsyncResult.fs" />
     <Compile Include="AsyncResultCE.fs" />
