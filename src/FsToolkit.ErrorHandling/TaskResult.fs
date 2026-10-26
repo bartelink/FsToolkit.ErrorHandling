@@ -173,13 +173,23 @@ module TaskResult =
         Task.zip left right
         |> Task.map (fun (r1, r2) -> Result.zipError r1 r2)
 
-    /// Catches exceptions and maps them to the Error case using the provided function.
+    /// <summary>Catches exceptions and maps them to the <c>Error</c> case using the provided function.</summary>
+    /// <remarks>As with <c>Task.catch</c>, <c>TaskCancelledException</c> will be rethrown and not caught.</remarks>
     let inline catchWith ([<InlineIfLambda>] f) x =
         x
         |> Task.catchWith (fun ex -> Error(f ex))
 
-    [<System.Obsolete "Please use TaskResult.catchWith instead of TaskResult.catch">]
-    let inline catch ([<InlineIfLambda>] f) x = catchWith f x
+    [<System.Obsolete "Please use TaskResult.catchWith instead of TaskResult.catch. NOTE TaskResult.catchWith will rethrow TaskCancelledException">]
+    let inline catch
+        ([<InlineIfLambda>] handler: exn -> Result<'ok, 'error>)
+        (task: Task<Result<'ok, 'error>>)
+        : Task<Result<'ok, 'error>> =
+        TaskBuilder.task {
+            try
+                return! task
+            with e ->
+                return handler e
+        }
 
     [<System.Obsolete "Please use 1. Task.startAsyncImmediate ct >> Task.catch OR 2. Async.StartImmediateAsTask >> Task.catch instead of TaskResult.ofAsync">]
     let inline ofAsync async : Task<Result<'ok, exn>> =
@@ -189,11 +199,18 @@ module TaskResult =
     [<System.Obsolete "Please use Task.map Ok instead of TaskResult.ofTask (Consider Task.catch/catchWith if you want to trap exceptions as Error)">]
     let inline ofTask (task: Task<'input>) : Task<Result<'input, 'error>> = Task.map Ok task
 
+    [<System.Obsolete "Please use Task.catch instead of TaskResult.ofCatchTask, NOTE Task.catch will rethrow TaskCancelledException.">]
+    let inline ofCatchTask (task: Task<'ok>) : Task<Result<'ok, exn>> =
+        TaskBuilder.task {
+            try
+                let! r = task
+                return Ok r
+            with e ->
+                return Error e
+        }
+
     [<System.Obsolete "Please use Task.result instead of TaskResult.ofResult">]
     let inline ofResult (x: Result<_, _>) = Task.result x
-
-    [<System.Obsolete "Please use Task.catch instead of TaskResult.ofCatchTask">]
-    let inline ofCatchTask (task: Task<'ok>) : Task<Result<'ok, exn>> = Task.catch task
 
     /// Returns the task-wrapped result if it is Ok and the checkFunc returns a task-wrapped Ok result or if the task-wrapped result is Error.
     /// If the checkFunc returns a task-wrapped Error result, returns the task-wrapped Error result.
