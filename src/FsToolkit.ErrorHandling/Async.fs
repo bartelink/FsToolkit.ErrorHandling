@@ -14,40 +14,6 @@ module Async =
     /// <returns>The <c>Async</c> value.</returns>
     [<System.Obsolete("Use the built in FSharp.Core Async.result instead")>]
     let inline singleton (value: 'value) : Async<'value> = Async.result value
-
-    /// <summary>
-    /// Takes a transformation function and applies it to the value of an <c>Async</c> value.
-    /// </summary>
-    /// <param name="binder">The function to bind over the <c>Async</c> value.</param>
-    /// <param name="input">The <c>Async</c> value to bind over.</param>
-    /// <returns>The result of binding the function over the <c>Async</c> value.</returns>
-    let inline bind
-        ([<InlineIfLambda>] binder: 'input -> Async<'output>)
-        (input: Async<'input>)
-        : Async<'output> =
-        async.Bind(input, binder)
-
-    /// <summary>
-    /// Applies a transformation to the value of an <c>Async</c> value to a new <c>Async</c> value using the provided function.
-    /// </summary>
-    /// <param name="mapper">The function to apply to the value of the <c>Async</c> value.</param>
-    /// <param name="input">The <c>Async</c> value to transform.</param>
-    /// <returns>The transformed <c>Async</c> value.</returns>
-    let inline map
-        ([<InlineIfLambda>] mapper: 'input -> 'output)
-        (input: Async<'input>)
-        : Async<'output> =
-        input
-        |> Async.bind (fun x' ->
-            mapper x'
-            |> Async.result
-        )
-
-    /// Allows us to call `do!` syntax inside a computation expression
-    [<RequiresExplicitTypeArguments>]
-    let inline ignore<'a> (x: Async<'a>) =
-        x
-        |> Async.map ignore
 #endif
 
     /// <summary>
