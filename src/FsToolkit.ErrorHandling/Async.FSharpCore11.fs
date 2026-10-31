@@ -14,7 +14,6 @@
 #endif
 module FsToolkit.ErrorHandling.FSharpCore11AsyncShims
 
-#if FABLE_COMPILER || !NET10_0_OR_GREATER
 open System.Threading
 open System.Threading.Tasks
 
@@ -425,6 +424,4 @@ module Async =
 #else
         parallelLimit maxDegreeOfParallelism computations
         |> ignore<unit[]>
-#endif
-
 #endif
